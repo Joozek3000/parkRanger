@@ -58,8 +58,12 @@ namespace ParkRangers.Spikes.S01
             if (player != null) Physics.IgnoreCollision(player.GetComponent<CharacterController>(), propCollider, ignore);
         }
 
-        Transform PlayerTransform(ulong clientId) =>
-            NetworkManager.SpawnManager.GetPlayerNetworkObject(clientId)?.transform;
+        // Not GetPlayerNetworkObject: on clients it errors for other clients' players.
+        Transform PlayerTransform(ulong clientId)
+        {
+            var players = NetworkManager.SpawnManager.GetPlayerNetworkObjects(clientId);
+            return players is { Count: > 0 } ? players[0].transform : null;
+        }
 
         void FixedUpdate()
         {
