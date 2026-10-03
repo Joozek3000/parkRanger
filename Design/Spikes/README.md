@@ -6,6 +6,7 @@ Spikes answer one technical question each. They are throwaway: the goal is a dec
 
 - One spec file per spike: `S0x-name.md`. Fill in **Results** when done.
 - Unity location: `Unity/Assets/_Spikes/S0x/` with its own scene. Nothing outside that folder depends on it.
+- Shared spike baseline (from S01): `Unity/Assets/_Spikes/Shared/`, namespace `ParkRangers.Spikes.Shared`. Network setup, first-person controller, latency simulation, debug overlay. Other spikes may reference `Shared/`; nothing outside `_Spikes/` may. Also throwaway.
 - Code from a spike is not carried into the prototype as-is. Rewrite it, or mark in Results which parts are worth keeping.
 - Stop at the time box. If it isn't answered, write down what's known and decide: extend once, or pick the safest option and move on.
 - A spike that changes a decision lists the proposed change in Results. The coordinator session updates `decisions.md` and `ideas.md`; Claude Code does not edit them.
