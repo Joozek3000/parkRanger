@@ -28,7 +28,8 @@ Success test: is it fun for 10 minutes with 2 people?
 - Chores: feeding, trash
 - Weirdness as a single number
 - Afternoon-to-night lighting shift
-- Stretch: one simple night threat (ghosts or shadow people)
+- Stretch: one simple night threat (ghosts or shadow people) — default: shadow people
+- Added by prototype spec draft (defaults, see `prototype-spec.md`): ranger station as spawn/return point; stop a fleeing tourist with a 2 s hold; Bigfoot hiding spot (cave); ignored chores draw Bigfoot
 
 ---
 

@@ -14,7 +14,7 @@ Status: **pre-production**. No Unity building until step 6 is done, apart from s
 | 2 | Pitch and pillars | Done |
 | 3 | Core loop | Done (draft level) |
 | 4 | Sort ideas | Done |
-| 5 | Tech setup and spikes (5a–5d below) | **Next: 5a** |
+| 5 | Tech setup and spikes (5a–5d below) | **5a done; next: 5b** |
 | 6 | Prototype spec: final in/out list, time box, fun test | Not started |
 | 7 | Rough roadmap (provisional) | Not started |
 
@@ -24,9 +24,9 @@ Changed 2026-10-03: setup first, then a prototype spec draft, then only the spik
 
 | Step | What | Time | Status |
 |---|---|---|---|
-| 5a | Setup: Git + LFS, Claude Code setup, CLAUDE.md, Unity housekeeping. Prompt: `Tools/cc-setup-prompt.md` | ~1 day | **Next** |
-| 5b | Prototype spec draft: in/out list from `ideas.md` → Prototype, list of unknowns | ~0.5 day | Not started |
-| 5c | Spikes for the prototype (below) | ~14 days | Specs written |
+| 5a | Setup: Git + LFS, Claude Code setup, CLAUDE.md, Unity housekeeping. Prompt: `Tools/cc-setup-prompt.md` | ~1 day | Done 2026-10-03 (commits 12f174b, 1c1712c) |
+| 5b | Prototype spec draft: `prototype-spec.md` | ~0.5 day | Done 2026-10-03 (Q1–Q9 on defaults) |
+| 5c | Spikes for the prototype (below) | ~14 days | **Next: S01** |
 | 5d | S04 PSX look: 1-day check now, full spike, or after the prototype | 0–3 days | **Undecided** |
 
 Spike order and rules: `Spikes/README.md`.

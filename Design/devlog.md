@@ -37,7 +37,9 @@ One entry per week, newest at the top. Copy the template below.
 - Unity project (6000.6.4f1) created with planned packages, template content only.
 - Repo root set up at `C:\projects\parkRanger`: `Unity/`, `Art/Source`, `Art/Export`, `Design/`, `Design/Spikes`, `Tools/`.
 - Design docs created: pillars, decisions, ideas, plan, devlog.
-- Spike specs S01–S05 written in `Design/Spikes/` (17 focused days total).
+- Spike specs S01–S05 written in `Design/Spikes/`.
+- 5a setup done via Claude Code: git + LFS (local only), CLAUDE.md, spike skill, Unity CLI, Blender skills. First commit 12f174b.
+- 5b prototype spec draft written (`prototype-spec.md`); Q1–Q9 set to defaults.
 
 ### Decisions changed
 - D24 Engine version: Unity 6.3 LTS → Unity 6.6 (6000.6.4f1).
@@ -50,7 +52,7 @@ One entry per week, newest at the top. Copy the template below.
 - none
 
 ### Problems / blockers
-- Git + LFS not set up yet.
+- none
 
 ### Hours (rough)
 -

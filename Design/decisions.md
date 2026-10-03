@@ -187,6 +187,7 @@ Nothing gets built in Unity until the prototype spec (plan step 6) is done, apar
 ### D32 Prototype scope and time box — provisional
 6–8 week time box, networked from day one. Scope in `ideas.md` → Prototype. Finalised in plan step 6.
 Success test: is it fun for 10 minutes with 2 people?
+Draft spec with defaults for Q1–Q9: `prototype-spec.md` (2026-10-03).
 
 ### D33 Workflow — settled
 Git + LFS, a simple task board, a weekly devlog.
