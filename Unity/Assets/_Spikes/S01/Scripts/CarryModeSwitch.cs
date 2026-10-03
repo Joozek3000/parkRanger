@@ -13,11 +13,8 @@ namespace ParkRangers.Spikes.S01
     {
         public readonly NetworkVariable<CarryMode> Mode = new(CarryMode.A_HostSim);
 
-        CarryableProp[] props;
-
         public override void OnNetworkSpawn()
         {
-            props = FindObjectsByType<CarryableProp>();
             var overlay = FindAnyObjectByType<NetworkStatsOverlay>();
             if (overlay != null) overlay.ExtraText = OverlayText;
         }
@@ -33,9 +30,11 @@ namespace ParkRangers.Spikes.S01
 
         string OverlayText()
         {
+            if (!IsSpawned) return "";
             var text = $"Carry mode: {Mode.Value} (host: 1/2/3)\n";
-            foreach (var p in props)
-                if (p.IsCarried || p.OwnerClientId != NetworkManager.ServerClientId)
+            // Live spawned set, so despawned/destroyed props never show up.
+            foreach (var obj in NetworkManager.SpawnManager.SpawnedObjectsList)
+                if (obj.TryGetComponent<CarryableProp>(out var p) && (p.IsCarried || p.OwnerClientId != NetworkManager.ServerClientId))
                     text += $"{p.name}: owner {p.OwnerClientId}, carrier {(p.IsCarried ? p.Carrier.Value.ToString() : "-")}, {p.ActiveMode.Value}\n";
             return text;
         }

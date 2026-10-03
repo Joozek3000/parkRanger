@@ -27,11 +27,12 @@ namespace ParkRangers.Spikes.Shared
         public string PresetLabel => Presets[presetIndex].label;
 
         NetworkManager Net => NetworkManager.Singleton;
+        string status;
 
         void Update()
         {
             var kb = Keyboard.current;
-            if (kb == null || !Net.IsListening) return;
+            if (kb == null || Net == null || !Net.IsListening) return;
             if (kb.f1Key.wasPressedThisFrame) ApplyPreset(0);
             if (kb.f2Key.wasPressedThisFrame) ApplyPreset(1);
             if (kb.f3Key.wasPressedThisFrame) ApplyPreset(2);
@@ -39,21 +40,25 @@ namespace ParkRangers.Spikes.Shared
 
         void OnGUI()
         {
-            if (Net.IsListening) return;
+            if (Net == null || Net.IsListening) return;
 
             GUILayout.BeginArea(new Rect(10, 10, 220, 200), GUI.skin.box);
             address = GUILayout.TextField(address);
             if (GUILayout.Button("Host")) StartNetwork(true);
             if (GUILayout.Button("Join")) StartNetwork(false);
             GUILayout.Label($"Sim on start: {PresetLabel} (F1/F2/F3 in game)");
+            if (status != null) GUILayout.Label($"<color=red>{status}</color>");
             GUILayout.EndArea();
         }
 
         void StartNetwork(bool host)
         {
             Net.GetComponent<UnityTransport>().SetConnectionData(address, port, host ? "0.0.0.0" : null);
+            status = null;
             if (host ? Net.StartHost() : Net.StartClient())
                 ApplyPreset(presetIndex);
+            else
+                status = host ? $"Host failed: port {port} in use?" : "Join failed, see Console.";
         }
 
         void ApplyPreset(int index)

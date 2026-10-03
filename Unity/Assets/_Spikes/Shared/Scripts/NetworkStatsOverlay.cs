@@ -24,6 +24,7 @@ namespace ParkRangers.Spikes.Shared
 
         void Update()
         {
+            if (Net == null) return;
             var transport = Net.NetworkConfig.NetworkTransport;
             if (Net.IsListening && subscribed != transport)
             {
@@ -52,10 +53,10 @@ namespace ParkRangers.Spikes.Shared
 
         void OnGUI()
         {
-            if (!Net.IsListening) return;
+            if (Net == null || !Net.IsListening) return;
 
-            var role = Net.IsHost ? "Host" : Net.IsServer ? "Server" : "Client";
-            var text = $"{role}  id {Net.LocalClientId}  sim {bootstrap?.PresetLabel}\n";
+            var role = Net.IsHost ? "<color=yellow>HOST</color>" : Net.IsServer ? "SERVER" : "<color=cyan>CLIENT</color>";
+            var text = $"<size=20><b>{role}</b></size>  id {Net.LocalClientId}  sim {bootstrap?.PresetLabel}\n";
             var transport = Net.NetworkConfig.NetworkTransport;
             if (Net.IsServer)
             {
