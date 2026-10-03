@@ -27,6 +27,8 @@ namespace ParkRangers.Spikes.S01
         Collider propCollider;
         CarryModeSwitch modeSwitch;
         float restTime;
+        // B: the owner stops following as soon as it releases; Carrier only clears a round trip later.
+        bool releasedLocally;
 
         void Awake()
         {
@@ -45,6 +47,7 @@ namespace ParkRangers.Spikes.S01
         // The carrier's capsule would otherwise bump into what it holds.
         void OnCarrierChanged(ulong previous, ulong current)
         {
+            releasedLocally = false;
             if (previous != NoCarrier) IgnorePlayer(previous, false);
             if (current != NoCarrier) IgnorePlayer(current, true);
         }
@@ -63,7 +66,7 @@ namespace ParkRangers.Spikes.S01
             if (!IsSpawned) return;
 
             var mode = ActiveMode.Value;
-            bool drives = IsCarried && (
+            bool drives = IsCarried && !releasedLocally && (
                 (mode == CarryMode.A_HostSim && IsServer) ||
                 (mode == CarryMode.B_Ownership && IsOwner));
             if (drives) FollowHold(PlayerTransform(Carrier.Value));
@@ -95,10 +98,12 @@ namespace ParkRangers.Spikes.S01
         /// <summary>Called on the carrier's machine. Zero velocity = drop.</summary>
         public void Release(Vector3 velocity)
         {
+            if (releasedLocally) return;
             if (ActiveMode.Value == CarryMode.B_Ownership && IsOwner)
             {
                 body.linearVelocity = velocity;
                 restTime = 0f;
+                releasedLocally = true;
             }
             ReleaseRpc(transform.position, transform.rotation, velocity);
         }

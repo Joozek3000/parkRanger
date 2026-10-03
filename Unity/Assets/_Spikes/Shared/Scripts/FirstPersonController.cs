@@ -32,6 +32,10 @@ namespace ParkRangers.Spikes.Shared
             cam.gameObject.SetActive(IsOwner);
             if (IsOwner)
             {
+                // Own body would block the camera; keep its shadow, others still see it.
+                foreach (var r in GetComponentsInChildren<Renderer>())
+                    r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
+
                 // Spawn points spread out so players don't overlap.
                 controller.enabled = false;
                 transform.position += new Vector3(OwnerClientId * 2f, 0f, 0f);
