@@ -43,20 +43,20 @@ Spike order and rules: `Spikes/README.md`.
 
 ### Repo and tools
 - [x] Repo folder structure (D34)
-- [x] Git + LFS init, `.gitignore`, `.gitattributes` (Claude Code, 5a); first commit pending
+- [x] Git + LFS init, `.gitignore`, `.gitattributes` (Claude Code, 5a); first commit done
 - [ ] Simple task board (where?)
 - [x] Unity official Claude Code plugin: installed (unity@claude-plugins-official 0.1.6-beta, skills only, no MCP). Restart Claude Code to load its skills.
 - [x] ~~unity-perf~~ dropped: no source found (D35)
-- [ ] Unity CLI connected via `com.unity.pipeline` (D35); Unity MCP is fallback only
+- [x] Unity CLI connected via `com.unity.pipeline` (D35); Unity MCP is fallback only
 - [x] Git identity: repo-local only (no remote for now)
 - [x] CLAUDE.md + `spike` project skill saved (setup Phase 3)
-- [ ] Setup Phase 5 (first commit), after the Unity CLI connects
+- [x] Setup Phase 5 (first commit), after the Unity CLI connects
 - [ ] Remove the leftover empty `C:\projects\parkRanger\parkRanger` folder after this Cowork session ends (its old folder connection recreates it)
 
 ### Unity project housekeeping
 - [x] ~~Add Polybrush~~ dropped: deprecated from Unity 6.3 (D27)
 - [x] Remove collab-proxy, Visual Scripting, AI Inference (D27, 5a)
-- [ ] Add Splines 2.9.1 to manifest.json directly (D27)
+- [x] Add Splines 2.9.1 to manifest.json directly (D27)
 - [x] Remove TutorialInfo + Readme.asset; create `Assets/_Project/` and `Assets/_Spikes/` (5a)
 - [ ] Remove SampleScene and Mobile renderer assets when the first real scene exists
 
