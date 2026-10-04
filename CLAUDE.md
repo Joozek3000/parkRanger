@@ -9,7 +9,7 @@ Solo developer: Jakub. Pre-production.
 ```
 Unity/            Unity project
   Assets/_Project/  real game content (Art, Audio, Materials, Prefabs, Scenes, Scripts, Settings)
-  Assets/_Spikes/   throwaway spike work, one folder per spike (S01, S02, ...)
+  Assets/_Spikes/   throwaway spike work, one folder per spike (S01, S02, ...) + Shared/ baseline
 Art/Source/       .blend files, source textures
 Art/Export/       FBX/GLB exports for Unity
 Design/           design docs (source of truth)
@@ -40,6 +40,7 @@ No gameplay code outside `Unity/Assets/_Spikes/` until the prototype spec (plan 
 Run them with the `spike` skill. Short rules (full version: `Design/Spikes/README.md`):
 - One spec per spike: `Design/Spikes/S0x-name.md`. Fill in **Results** when done.
 - Unity work in `Unity/Assets/_Spikes/S0x/` with its own scene. Nothing outside that folder depends on it.
+- Shared spike baseline (network setup, FP controller, latency sim, debug overlay): `Unity/Assets/_Spikes/Shared/`, namespace `ParkRangers.Spikes.Shared`. Spikes may reference `Shared/`; nothing outside `_Spikes/` may. Also throwaway.
 - Spike code is not carried into the prototype as-is. Note in Results what is worth keeping.
 - Stop at the time box (focused days, ~6 h each). If unanswered: write what's known, then extend once or pick the safest option.
 - Decision changes go in Results as proposals. The coordinator updates `decisions.md`.

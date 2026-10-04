@@ -34,13 +34,39 @@ This spike also builds the network baseline that S02, S03 and S05 reuse: host/jo
 
 ## Done when
 
-- [ ] Two players join, move and see each other at 100 ms and 200 ms RTT.
-- [ ] Carry model chosen: the carrier sees no visible snap or rubber-banding at 100 ms; the other player sees smooth motion.
-- [ ] A thrown crate lands in the same place on both screens (or the difference is too small to notice).
+- [x] Two players join, move and see each other at 100 ms and 200 ms RTT.
+- [x] Carry model chosen: the carrier sees no visible snap or rubber-banding at 100 ms; the other player sees smooth motion.
+- [x] A thrown crate lands in the same place on both screens (or the difference is too small to notice).
 - [ ] (Stretch) Ragdoll triggers and recovers on both screens; final standing position matches.
-- [ ] Bandwidth noted for 2 players + 10 props.
+- [x] Bandwidth noted for 2 players + 10 props.
 - [ ] D26 updated with the chosen authority models.
 
 ## Out of scope
 
 Animation, IK hands, many objects, vehicles, Steam.
+
+## Results (2026-10-04)
+- Answer:
+  - Player movement: owner-authoritative (client moves itself, NetworkTransform with owner authority). Feels right at 100 and 200 ms.
+  - Carry model: **C as default** (kinematic while carried, every peer pins the prop to its own view of the carrier; host keeps physics authority, so it fits D26). **B as fallback.** A is out for carried props.
+  - A (host sim): as client the carried prop trails by ~1 RTT when running or turning. Host view is normal.
+  - B (ownership to carrier): no lag as client at 100 and 200 ms. Pickup takes ~1 RTT (ownership round trip) before the prop follows.
+  - C (kinematic attach): no lag as client. Throws and collisions look OK in B and C; thrown crates land in the same place on both screens. C's throw hangs ~1 RTT (release goes to the host first); the prototype should start the throw locally to hide it.
+  - TrashBag: behaves the same as the crates in all modes.
+  - Ragdoll (stretch, Q3/Q4): skipped.
+- Numbers measured:
+  - Bandwidth, 2 players + 10 props, mode C, both players moving and carrying, 100 ms + 1% loss: host receives ~1.2 kB/s, client receives ~2.3 kB/s. NGO payload only (no UTP/UDP headers, roughly +30 B per packet). Read via the CLI from the debug overlay, 5 samples each side.
+  - Hours used: ~4 h of 18 h (Claude Code built, Jakub tested).
+- What surprised me:
+  - C with NetworkObject parenting put the prop at the wrong spot on the client, mirrored on turns. Pinning locally on every peer (no parenting) fixed it and is simpler.
+  - Scene management is OFF, so in-scene props are matched by GlobalObjectIdHash. Saving a prop prefab while `S01_Carry` was open broke the match: the client failed to spawn those props ("NetworkPrefab could not be found") until the prefab was reverted. Fragile; the prototype should either turn scene management on or spawn props at runtime.
+  - Own body had to be hidden from the owner camera (shadows only), and the client needed a client-safe player lookup (`GetPlayerNetworkObject` errors for other clients' players).
+- Keep (code/assets worth carrying over):
+  - `Shared/`: NetworkBootstrap (host/join + F1/F2/F3 latency presets via `ModifyNetworkSimulatorParameters`), NetworkStatsOverlay, owner-authoritative FirstPersonController. Spikes S02/S03/S05 reuse them.
+  - C pattern from `CarryableProp`: local pin in LateUpdate on every peer, and on release teleport to the carrier's reported pose before applying throw velocity.
+  - Rewrite, don't copy: the per-frame prop scan in PlayerCarrier and the mode switch are spike scaffolding.
+- Decisions updated (proposals for the coordinator):
+  - D26: "Player movement owner-authoritative. Physics objects host-authoritative; carried objects kinematic and attached locally on every peer while carried (S01 model C), physics resumes on the host at drop/throw; throw starts locally on the carrier to hide ~1 RTT. Fallback: ownership transfer to the carrier (S01 model B)." Could move from provisional to decided for these parts.
+- Follow-up ideas → ideas.md:
+  - Decide scene management on/off (or runtime-spawned props) in the prototype spec.
+  - Two-player heavy-crate carry not tested (stretch); revisit if co-op carrying becomes a prototype feature.

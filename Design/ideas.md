@@ -10,7 +10,8 @@ Last updated: 2026-10-03
 
 ## Inbox (unsorted)
 
-_Empty._
+- 2026-10-04 — Two players carrying one heavy object together (Peak-style) — Core? — none — pillar 1. Not tested in S01.
+- 2026-10-04 — Ragdoll for rangers — Later (already listed) — none — pillar 3. Skipped in S01.
 
 Format: `- YYYY-MM-DD — idea — suggested bucket? — conflicts? — pillar(s)`
 

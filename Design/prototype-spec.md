@@ -94,7 +94,8 @@ Vehicles, 3–4 players, FBI, hotel, town buildings except the diner, chief rang
 
 | Unknown | Spike |
 |---|---|
-| Carry/throw authority model, network feel | S01 |
+| Carry/throw authority model, network feel | S01 — **done**: model C (D26) |
+| NGO scene management on/off (in-scene props fragile with it off) | Prototype spec decision (from S01) |
 | How two remote players connect; voice solution | S05 |
 | Radio filter chain, range curve, overheard range | S02 |
 | Witness check cost and feel; day vs night detection | S03 |

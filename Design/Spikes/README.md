@@ -6,12 +6,13 @@ Spikes answer one technical question each. They are throwaway: the goal is a dec
 
 - One spec file per spike: `S0x-name.md`. Fill in **Results** when done.
 - Unity location: `Unity/Assets/_Spikes/S0x/` with its own scene. Nothing outside that folder depends on it.
+- Shared spike baseline (from S01): `Unity/Assets/_Spikes/Shared/`, namespace `ParkRangers.Spikes.Shared`. Network setup, first-person controller, latency simulation, debug overlay. Other spikes may reference `Shared/`; nothing outside `_Spikes/` may. Also throwaway.
 - Code from a spike is not carried into the prototype as-is. Rewrite it, or mark in Results which parts are worth keeping.
 - Stop at the time box. If it isn't answered, write down what's known and decide: extend once, or pick the safest option and move on.
 - A spike that changes a decision lists the proposed change in Results. The coordinator session updates `decisions.md` and `ideas.md`; Claude Code does not edit them.
 - Spike work happens on branch `spike/S0x`. Results must end up on `main` (merge after Jakub's OK) so the coordinator sees them.
 - Time boxes are in **focused days** (~6 h of work). Convert to evenings as needed.
-- Test networked spikes with Multiplayer Play Mode (host + 1 client) and simulated latency: 100 ms round trip, 1% packet loss, plus one run at 200 ms.
+- Test networked spikes with Multiplayer Play Mode (host + 1 client) and simulated latency: 100 ms round trip, 1% packet loss, plus one run at 200 ms. Use the Shared baseline's F1/F2/F3 presets (Unity Transport's own debug simulator is obsolete in this NGO version). Host in the main Editor, Join in Player 2.
 
 ## Order (suggested)
 

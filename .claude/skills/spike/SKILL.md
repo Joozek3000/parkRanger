@@ -23,6 +23,7 @@ Argument: spike ID, e.g. `S01`. If missing, ask.
 
 - Create `Unity/Assets/_Spikes/S0x/` with its own scene (name from the spec, else `S0x_Main`).
 - Namespace `ParkRangers.Spikes.S0x`. Nothing outside `_Spikes/S0x/` may reference it.
+- Reuse the baseline in `_Spikes/Shared/` (`ParkRangers.Spikes.Shared`: network setup, FP controller, latency sim, debug overlay). Spikes may reference `Shared/`; nothing outside `_Spikes/` may. Generic baseline improvements go in `Shared/`; spike-specific code stays in `S0x/`.
 - Install spike-only packages only if the spec calls for them, and ask first.
 
 ## 4. Build
