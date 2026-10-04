@@ -56,7 +56,7 @@ Animation, IK hands, many objects, vehicles, Steam.
   - Ragdoll (stretch, Q3/Q4): skipped.
 - Numbers measured:
   - Bandwidth, 2 players + 10 props, mode C, both players moving and carrying, 100 ms + 1% loss: host receives ~1.2 kB/s, client receives ~2.3 kB/s. NGO payload only (no UTP/UDP headers, roughly +30 B per packet). Read via the CLI from the debug overlay, 5 samples each side.
-  - Hours used: ~18 h of 18 h (full time box).
+  - Hours used: ~4 h of 18 h (Claude Code built, Jakub tested).
 - What surprised me:
   - C with NetworkObject parenting put the prop at the wrong spot on the client, mirrored on turns. Pinning locally on every peer (no parenting) fixed it and is simpler.
   - Scene management is OFF, so in-scene props are matched by GlobalObjectIdHash. Saving a prop prefab while `S01_Carry` was open broke the match: the client failed to spawn those props ("NetworkPrefab could not be found") until the prefab was reverted. Fragile; the prototype should either turn scene management on or spawn props at runtime.
