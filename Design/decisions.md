@@ -159,7 +159,7 @@ Changed 2026-10-04 after S01.
 - Ruled out for carried objects: host simulates the carried prop (S01 model A); it trails the carrier by ~1 round trip.
 - Measured: ~1.2 kB/s (host in) / ~2.3 kB/s (client in), 2 players + 10 props, NGO payload only.
 - Provisional: interest management, AI level of detail.
-- Open: NGO scene management on or off. With it off, in-scene props break easily (a prefab save stopped the client spawning them). Decide in the prototype spec: turn it on, or spawn props at runtime.
+- Open: NGO scene management on or off. With it off, in-scene props break easily: a prefab save stopped the client spawning them (S01), and builds from a scene not in Build Settings sent hashes no client could resolve, while Editor/MPPM still worked (S05). Decide in the prototype spec: turn it on, or spawn props at runtime. Coordinator leans: spawn props at runtime.
 
 **History**
 - 2026-10-04: was "provisional: Netcode for GameObjects, host-authoritative physics, interest management, AI level of detail". S01 settled movement and carrying. Source: `Spikes/S01-carrying-ragdoll.md` Results.
@@ -222,6 +222,7 @@ Added 2026-10-03.
   - arjun988 `lowpoly-style` and `unity-export` only, not the plugin (its plugin adds an unpinned second Blender MCP on port 9876)
   - blender-game-skills: skipped for now; revisit when characters need rigging
 - Blender Lab MCP: configured for the frozen mech project only. Add to parkRanger when real art work starts.
+- Test machine: Ubuntu laptop (x86_64) reachable from the PC over SSH (home LAN, key auth, added 2026-10-04). Claude Code uses it for build-to-build tests: copy builds, launch, read Player.log, measure audio. Not exposed to the internet.
 - Codex as a 3D modeling assistant (no code work): undecided (2026-10-04). If yes, it gets its own short modeling-only `AGENTS.md` (Art/ rules, Blender backups, export conventions), not a copy of CLAUDE.md.
 
 ### D34 Repo folder structure — settled
