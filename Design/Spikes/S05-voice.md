@@ -39,7 +39,7 @@ Proximity voice is the default and the radio filter chain (S02) has to be able t
 ## What to build
 
 - Day 1: read docs, check current prices and versions, fill in both tables. Pick top choice + fallback for each.
-- Day 2: connection: two builds on two machines (or one machine + a friend) join the same session through the chosen method.
+- Day 2: connection: two builds on two machines (or one machine + a friend) join the same session through the chosen method. Add join-failure handling to the Shared baseline (OnClientStopped + DisconnectReason shown in the UI); a join to a missing host currently fails silently.
 - Days 3–4: integrate the top choice into the S01 baseline:
   - proximity voice between 2 players in Play Mode, then between 2 builds on different machines if possible
   - route one player's voice through a test radio AudioSource with the S02 filter chain

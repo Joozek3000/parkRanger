@@ -150,8 +150,19 @@ Changed 2026-10-03.
 
 ### D25 Art tool: Blender — settled
 
-### D26 Networking — provisional
-Netcode for GameObjects, host-authoritative physics, interest management, AI level of detail.
+### D26 Networking — settled (movement + carrying), provisional (rest)
+Changed 2026-10-04 after S01.
+- **Settled:** Netcode for GameObjects, host-based (no dedicated server).
+- **Settled:** player movement is owner-authoritative (each client moves itself).
+- **Settled:** physics objects are host-authoritative. Carried objects are kinematic and pinned locally to the carrier on every machine while carried (S01 model C). Physics resumes on the host at drop/throw. The prototype starts the throw locally on the carrier to hide the ~1 round-trip hang.
+- Fallback: ownership moves to the carrier (S01 model B). Works without lag but adds a ~1 round-trip pickup delay, and client-thrown objects treat host props as immovable while in flight.
+- Ruled out for carried objects: host simulates the carried prop (S01 model A); it trails the carrier by ~1 round trip.
+- Measured: ~1.2 kB/s (host in) / ~2.3 kB/s (client in), 2 players + 10 props, NGO payload only.
+- Provisional: interest management, AI level of detail.
+- Open: NGO scene management on or off. With it off, in-scene props break easily (a prefab save stopped the client spawning them). Decide in the prototype spec: turn it on, or spawn props at runtime.
+
+**History**
+- 2026-10-04: was "provisional: Netcode for GameObjects, host-authoritative physics, interest management, AI level of detail". S01 settled movement and carrying. Source: `Spikes/S01-carrying-ragdoll.md` Results.
 
 ### D27 Unity packages — provisional
 Changed 2026-10-03.
@@ -204,6 +215,7 @@ Added 2026-10-03.
   - arjun988 `lowpoly-style` and `unity-export` only, not the plugin (its plugin adds an unpinned second Blender MCP on port 9876)
   - blender-game-skills: skipped for now; revisit when characters need rigging
 - Blender Lab MCP: configured for the frozen mech project only. Add to parkRanger when real art work starts.
+- Codex as a 3D modeling assistant (no code work): undecided (2026-10-04). If yes, it gets its own short modeling-only `AGENTS.md` (Art/ rules, Blender backups, export conventions), not a copy of CLAUDE.md.
 
 ### D34 Repo folder structure — settled
 Changed 2026-10-03.
@@ -242,5 +254,6 @@ How players switch to it (per-player toggle, settings option, item?) and whether
 | 2026-10-03 | D27 | Polybrush dropped; collab-proxy, Visual Scripting, AI Inference to be removed | Polybrush deprecated from 6.3; extras unused |
 | 2026-10-03 | D28 | Connection method added to the voice spike (S05) | Prototype fun test needs remote players |
 | 2026-10-03 | plan | Step 5 split: setup → prototype spec draft → spikes; ragdoll to stretch | Spikes should target what the prototype needs |
+| 2026-10-04 | D26 | Movement owner-authoritative; carried objects pinned locally (model C), host physics; B fallback; A out | S01 Results |
 | 2026-10-03 | D35 | Claude Code tooling: Unity CLI over deprecated Unity MCP; Blender skills reviewed and copied; unity-perf dropped | Setup Phase 4 review |
 | 2026-10-03 | D34 | Repo root moved up one level; Unity project folder renamed to `Unity` | Room for Art, Design, Tools beside the Unity project |

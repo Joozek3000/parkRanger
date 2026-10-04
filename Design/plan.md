@@ -26,14 +26,14 @@ Changed 2026-10-03: setup first, then a prototype spec draft, then only the spik
 |---|---|---|---|
 | 5a | Setup: Git + LFS, Claude Code setup, CLAUDE.md, Unity housekeeping. Prompt: `Tools/cc-setup-prompt.md` | ~1 day | Done 2026-10-03 (commits 12f174b, 1c1712c) |
 | 5b | Prototype spec draft: `prototype-spec.md` | ~0.5 day | Done 2026-10-03 (Q1–Q9 on defaults) |
-| 5c | Spikes for the prototype (below) | ~14 days | **Next: S01** |
+| 5c | Spikes for the prototype (below) | ~14 days | S01 done; **next: S05** |
 | 5d | S04 PSX look: 1-day check now, full spike, or after the prototype | 0–3 days | **Undecided** |
 
 Spike order and rules: `Spikes/README.md`.
 
 | # | Spike | Spec | Time box | Status |
 |---|---|---|---|---|
-| S01 | Network baseline + object carrying (ragdoll = stretch) | `Spikes/S01-carrying-ragdoll.md` | 3 days | Spec written |
+| S01 | Network baseline + object carrying (ragdoll = stretch) | `Spikes/S01-carrying-ragdoll.md` | 3 days | **Done 2026-10-04**: model C, B fallback (D26). Ragdoll skipped. |
 | S05 | Connection (Steam lobbies vs Unity Relay) + voice chat | `Spikes/S05-voice.md` | 4 days | Spec written |
 | S02 | Radio range, filter and static | `Spikes/S02-radio.md` | 4 days | Spec written |
 | S03 | Tourist line-of-sight witness check | `Spikes/S03-witness-check.md` | 3 days | Spec written |
@@ -61,6 +61,7 @@ Spike order and rules: `Spikes/README.md`.
 - [ ] Remove SampleScene and Mobile renderer assets when the first real scene exists
 
 ### Blender
+- [ ] Decide whether Codex is used as a 3D modeling assistant (D35). Until then, `AGENTS.md` and `.agents/` stay out of git (local exclude).
 - [x] Blender Lab MCP add-on v1.0.3 installed, connection tested (localhost:9876)
 - [ ] Backups in place before using the MCP (it runs AI-generated code unguarded)
 - [x] Blender skills reviewed; LPM (trimmed), lowpoly-style, unity-export copied; blender-game-skills skipped (D35)
