@@ -12,8 +12,10 @@ using UnityEngine.InputSystem;
 namespace ParkRangers.Spikes.S05
 {
     /// <summary>
-    /// Vivox voice once NGO is connected. Each remote player gets two participant taps:
-    /// a 3D proximity AudioSource on their body and a 2D radio AudioSource with filters at the listener.
+    /// Vivox voice once NGO is connected. Each remote player gets one participant tap on a 3D proximity
+    /// AudioSource on their body, plus a 2D radio AudioSource with filters at the listener that plays the
+    /// tap's own stream clip in sync. Two taps per participant don't work: Vivox hands both the same native
+    /// tap id, and whichever reads first drains the buffer, so the other starves and pauses.
     /// Group channel, not positional: Vivox positional culls out-of-range speakers, which would kill the radio.
     /// Vivox DisplayName = "c" + NGO client ID, so a participant maps to its player object without extra sync.
     /// T toggles the radio, M mutes the mic.
@@ -54,6 +56,7 @@ namespace ParkRangers.Spikes.S05
                 radioOn = !radioOn;
                 foreach (var t in taps.Values) if (t.radio != null) t.radio.SetActive(radioOn);
             }
+            foreach (var t in taps.Values) if (t.proximity != null && t.radio != null && t.radio.activeSelf) Mirror(t.proximity, t.radio);
             if (kb != null && kb.mKey.wasPressedThisFrame && VivoxService.Instance.IsLoggedIn)
             {
                 if (VivoxService.Instance.IsInputDeviceMuted) VivoxService.Instance.UnmuteInputDevice();
@@ -110,7 +113,8 @@ namespace ParkRangers.Spikes.S05
             {
                 if (p.IsSelf || (taps.TryGetValue(p.PlayerId, out var t) && t.proximity != null)) continue;
                 if (!ulong.TryParse(p.DisplayName.TrimStart('c'), out var clientId)) continue;
-                var player = Net.SpawnManager.GetPlayerNetworkObject(clientId);
+                // GetPlayerNetworkObject only knows other players on the server.
+                var player = Net.SpawnManager.SpawnedObjectsList.FirstOrDefault(o => o.IsPlayerObject && o.OwnerClientId == clientId);
                 if (player == null) continue; // not spawned yet, next poll
 
                 RemoveTaps(p.PlayerId);
@@ -121,8 +125,11 @@ namespace ParkRangers.Spikes.S05
                 src.minDistance = 1f;
                 src.maxDistance = voiceMaxDistance;
 
-                var radio = CreateTap(p, "VoiceRadio", transform, Vector3.zero);
-                radio.GetComponent<AudioSource>().spatialBlend = 0f;
+                var radio = new GameObject($"VoiceRadio {p.DisplayName}", typeof(AudioSource));
+                radio.transform.SetParent(transform, false);
+                var radioSrc = radio.GetComponent<AudioSource>();
+                radioSrc.spatialBlend = 0f;
+                radioSrc.loop = true;
                 radio.AddComponent<AudioHighPassFilter>().cutoffFrequency = radioHighPass;
                 radio.AddComponent<AudioLowPassFilter>().cutoffFrequency = radioLowPass;
                 radio.AddComponent<AudioDistortionFilter>().distortionLevel = radioDistortion;
@@ -152,6 +159,25 @@ namespace ParkRangers.Spikes.S05
             return go;
         }
 
+        // Radio plays the proximity tap's stream clip at the same read position. The tap writes ~40 ms ahead
+        // of the proximity read pointer and silences what it has played, so the radio must stay on that pointer.
+        static void Mirror(GameObject proximity, GameObject radio)
+        {
+            var prox = proximity.GetComponent<AudioSource>();
+            var src = radio.GetComponent<AudioSource>();
+            if (src.clip != prox.clip) { src.Stop(); src.clip = prox.clip; }
+            if (prox.clip == null || !prox.isPlaying)
+            {
+                if (src.isPlaying) src.Pause();
+                return;
+            }
+            if (!src.isPlaying) { src.timeSamples = prox.timeSamples; src.Play(); return; }
+            var len = prox.clip.samples;
+            var drift = ((src.timeSamples - prox.timeSamples) % len + len) % len;
+            if (drift > len / 2) drift -= len;
+            if (Mathf.Abs(drift) > 1024) src.timeSamples = prox.timeSamples; // ponytail: hard resync (audible click), fine at this drift
+        }
+
         void RemoveTaps(string playerId)
         {
             if (!taps.Remove(playerId, out var t)) return;
@@ -165,7 +191,7 @@ namespace ParkRangers.Spikes.S05
             var local = Net.SpawnManager?.GetLocalPlayerObject();
             var cam = local != null ? local.GetComponentInChildren<Camera>() : null;
             if (cam == null || cam.GetComponent<AudioListener>() != null) return;
-            foreach (var l in FindObjectsByType<AudioListener>(FindObjectsSortMode.None)) Destroy(l);
+            foreach (var l in FindObjectsByType<AudioListener>()) Destroy(l);
             cam.gameObject.AddComponent<AudioListener>();
         }
 
@@ -184,6 +210,6 @@ namespace ParkRangers.Spikes.S05
         }
 
         static string Running(GameObject go) =>
-            go == null ? "-" : go.activeInHierarchy && go.GetComponent<VivoxParticipantTap>().IsRunning ? "ok" : "off";
+            go == null ? "-" : !go.activeInHierarchy ? "off" : go.GetComponent<AudioSource>().isPlaying ? "playing" : "idle";
     }
 }
