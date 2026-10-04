@@ -111,6 +111,24 @@ namespace ParkRangers.Spikes.S02
             seen.Clear();
         }
 
+        public string Diag()
+        {
+            var text = $"{name} pow {Powered} static {noise.volume:F2} rms {Rms(noise):F3}";
+            foreach (var (talker, src) in voices)
+                text += $" | c{talker} sig {signals.GetValueOrDefault(talker):F2} {(src.isPlaying ? "playing" : "stopped")} vol {src.volume:F2} rms {Rms(src):F3}";
+            return text;
+        }
+
+        // Source output (after its filters, before distance attenuation), last 1024 samples.
+        static float Rms(AudioSource src)
+        {
+            var buf = new float[1024];
+            src.GetOutputData(buf, 0);
+            var sum = 0f;
+            foreach (var v in buf) sum += v * v;
+            return Mathf.Sqrt(sum / buf.Length);
+        }
+
         // 2 s of hiss with crackle bursts, looped; the radio band filters shape it like the voice.
         static AudioClip NoiseClip()
         {

@@ -19,7 +19,7 @@ namespace ParkRangers.Spikes.S02
     /// any scene load (Vivox taps can go silent after one).
     /// Radios mirror the tap's stream clip (Mirror); two taps per participant share one buffer in Vivox.
     /// Keys: M mic mute, O Vivox output (diagnosis), J 440 Hz test tone, K hide remote bodies locally,
-    /// L load + unload an empty scene (tap re-create test).
+    /// L load + unload an empty scene (tap re-create test). Command line -s02tone starts the tone.
     /// </summary>
     public class S02Voice : MonoBehaviour
     {
@@ -33,7 +33,7 @@ namespace ParkRangers.Spikes.S02
         string state = "voice: waiting for connection";
         bool started;
         float nextPoll;
-        bool toneOn;
+        bool toneOn = Environment.GetCommandLineArgs().Contains("-s02tone");
         bool toneSent;
         float nextTone;
         bool bodiesHidden;
@@ -71,7 +71,7 @@ namespace ParkRangers.Spikes.S02
             if (started && !Net.IsListening) _ = StopVoice();
 
             var kb = Keyboard.current;
-            if (kb != null && VivoxService.Instance.IsLoggedIn)
+            if (kb != null && vivoxInitialized && VivoxService.Instance.IsLoggedIn)
             {
                 if (kb.jKey.wasPressedThisFrame) toneOn = !toneOn;
                 if (kb.mKey.wasPressedThisFrame)
@@ -139,7 +139,7 @@ namespace ParkRangers.Spikes.S02
             foreach (var key in taps.Keys.ToList()) RemoveTap(key);
             channel = null;
             state = "voice: waiting for connection";
-            if (VivoxService.Instance.IsLoggedIn) await VivoxService.Instance.LogoutAsync();
+            if (vivoxInitialized && VivoxService.Instance.IsLoggedIn) await VivoxService.Instance.LogoutAsync();
         }
 
         void SyncTaps()
@@ -266,6 +266,7 @@ namespace ParkRangers.Spikes.S02
 
         public string OverlayText()
         {
+            if (!vivoxInitialized) return state + "\n";
             var vivox = VivoxService.Instance;
             var lines = $"{state}  taps made {tapsCreated}\nmic (M): {(vivox.IsLoggedIn && vivox.IsInputDeviceMuted ? "muted" : "live")}  tone (J): {(toneOn ? "on" : "off")}"
                         + $"  vivox out (O): {(vivox.IsLoggedIn && vivox.IsOutputDeviceMuted ? "muted" : "ON")}  hide bodies (K): {bodiesHidden}  scene reload (L)";

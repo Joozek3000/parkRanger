@@ -68,6 +68,7 @@ namespace ParkRangers.Spikes.S02
         string npcLine = "";
         Texture2D plot;
         float nextPlot;
+        float nextDiag;
 
         NetworkManager Net => NetworkManager.Singleton;
 
@@ -126,6 +127,12 @@ namespace ParkRangers.Spikes.S02
             }
 
             CheckOverheard();
+
+            if (Time.unscaledTime >= nextDiag)
+            {
+                nextDiag = Time.unscaledTime + 1f;
+                Debug.Log("[S02diag] " + string.Join("  ||  ", radios.Where(r => r != null).Select(r => r.Diag())));
+            }
         }
 
         void CheckOverheard()
