@@ -1,9 +1,9 @@
 # S05 — Connection + voice chat
 
-Status: not started
+Status: **done 2026-10-04** (merged c474480). D28 settled.
 Time box: 4 days (1 day research, 1 day connection test, 2 days voice test)
 Changed 2026-10-03: connection method added (was voice only, 3 days).
-Related: D20 Proximity voice, D28 Steam lobbies and voice (open), S02 Radio
+Related: D20 Proximity voice, D28 Connection and voice (settled for prototype), S02 Radio
 
 ## Goal
 
@@ -95,7 +95,7 @@ Sources:
 - [x] Comparison tables filled in with sources and current prices.
 - [x] Top choice tested: proximity voice works between two clients.
 - [x] Voice can be routed through the radio filter chain. **Must-answer for Vivox:** the same player's voice plays both as proximity voice and through a separate radio AudioSource with its own filters, at the same time. If not possible within ~1 day, stop and report: the fallback is buying Dissonance.
-- [ ] D28 updated with the connection and voice decisions.
+- [x] D28 updated with the connection and voice decisions (coordinator, 2026-10-04).
 
 ## Out of scope
 

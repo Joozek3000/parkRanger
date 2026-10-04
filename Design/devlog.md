@@ -41,6 +41,7 @@ One entry per week, newest at the top. Copy the template below.
 - 5a setup done via Claude Code: git + LFS (local only), CLAUDE.md, spike skill, Unity CLI, Blender skills. First commit 12f174b.
 - 5b prototype spec draft written (`prototype-spec.md`); Q1–Q9 set to defaults.
 - S01 done: owner-authoritative movement, carry model C (B fallback, A out). Shared spike baseline in `_Spikes/Shared/`.
+- S05 done: Unity Relay + Lobby (Windows ↔ Ubuntu, RTT 61 ms), Vivox proximity voice, radio via tap mirroring. Build stamps, SSH test laptop.
 
 ### Decisions changed
 - D24 Engine version: Unity 6.3 LTS → Unity 6.6 (6000.6.4f1).
@@ -48,6 +49,7 @@ One entry per week, newest at the top. Copy the template below.
 - D27 Polybrush dropped (deprecated from Unity 6.3); collab-proxy, Visual Scripting, AI Inference to be removed.
 - D28 Connection method added to S05.
 - D26 settled for movement and carrying (S01).
+- D28 settled for the prototype (S05).
 - Plan step 5 split into setup → prototype spec draft → spikes.
 
 ### New ideas added
@@ -60,5 +62,5 @@ One entry per week, newest at the top. Copy the template below.
 -
 
 ### Next week
-- S05: connection (Steam lobbies vs Unity Relay) + voice.
-- Then S02 radio.
+- S02 radio (on real Vivox voice).
+- Then S03 witness check.

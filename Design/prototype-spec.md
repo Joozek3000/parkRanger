@@ -96,7 +96,7 @@ Vehicles, 3–4 players, FBI, hotel, town buildings except the diner, chief rang
 |---|---|
 | Carry/throw authority model, network feel | S01 — **done**: model C (D26) |
 | NGO scene management on/off (in-scene props fragile with it off; broke all S01 builds in S05) | Prototype spec decision (from S01/S05). Lean: spawn props at runtime |
-| How two remote players connect; voice solution | S05 |
+| How two remote players connect; voice solution | S05 — **done**: Relay + Lobby, Vivox (D28) |
 | Radio filter chain, range curve, overheard range | S02 |
 | Witness check cost and feel; day vs night detection | S03 |
 | Prototype look | S04 (undecided) |

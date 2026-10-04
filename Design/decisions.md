@@ -177,16 +177,17 @@ Planned: Netcode for GameObjects, Unity Transport, Multiplayer Play Mode, Input 
 **History**
 - 2026-10-03: planned list included Polybrush. Jakub couldn't find it in Package Manager; it is deprecated from Unity 6.3.
 
-### D28 Connection (lobbies/relay) and voice — provisional
-Changed 2026-10-04 after S05 day 1 research (details and sources in `Spikes/S05-voice.md`). Final after the S05 tests.
-- Connection for the prototype: **Unity Relay + Lobby** (free up to 50 avg monthly CCU; works with two builds on one machine). Fallback: Steam (Facepunch; its NGO transport is stale).
-- Connection for release: Steam lobbies likely (friend invites). Decide later; swapping means replacing transport + lobby code only.
-- Voice: **Vivox first** (free, same Unity Cloud project as Relay). Jakub chose free for now.
-  - Risk: playing one player's voice through a second, filtered radio source is undocumented in Vivox, and there is a known silent-audio-after-scene-load bug.
-  - Fallback: Dissonance (~€55 on sale / €110 regular, one-time; built-in Audio Cloning fits the radio). If Vivox can't feed the radio in S05, buying Dissonance is the next step.
-- Steam voice: out (whole pipeline would be custom).
+### D28 Connection (lobbies/relay) and voice — settled for the prototype
+Settled 2026-10-04 after S05 (`Spikes/S05-voice.md` Results).
+- Connection for the prototype: **Unity Relay + Lobby** (Multiplayer Sessions API, join codes, anonymous UGS sign-in). Tested build to build, Windows ↔ Ubuntu over the internet, RTT 61 ms. Fallback: Steam (Facepunch; its NGO transport is stale).
+- Connection for release: Steam lobbies likely (friend invites). Decide when there is a Steam app ID; swapping means replacing transport + lobby code only.
+- Voice: **Vivox**, one group channel (not positional). Proximity = one participant tap per remote player on their body, Unity 3D audio (linear, 1–25 m). Vivox's own output muted so only the taps play. Measured 1.00 / 0.65 / 0.22 / 0 at 2 / 10 / 20 / 30 m on all three test paths.
+- Radio: a second AudioSource replays the proximity tap's audio through its own filter chain (two taps per player don't work in Vivox). Risk: the radio goes silent whenever the proximity source stops (player body despawned or disabled, scene load). Fallback: Dissonance (~€55–110 one-time, built-in Audio Cloning).
+- Builds carry a commit stamp; joins with a different commit are refused.
+- Not yet tested: occlusion, push-to-talk / voice activation / per-player mute UI (Vivox has the APIs). Push-to-talk is in S02.
 
 **History**
+- 2026-10-04 (2nd): was "provisional: Relay + Lobby for the prototype, Vivox first, Dissonance fallback". S05 tests passed.
 - 2026-10-04: was "open: Steam lobbies vs Unity Relay + Lobby; Dissonance vs Vivox vs Steam voice".
 
 ### D29 PSX shaders — provisional
@@ -262,6 +263,7 @@ How players switch to it (per-player toggle, settings option, item?) and whether
 | 2026-10-03 | D27 | Polybrush dropped; collab-proxy, Visual Scripting, AI Inference to be removed | Polybrush deprecated from 6.3; extras unused |
 | 2026-10-03 | D28 | Connection method added to the voice spike (S05) | Prototype fun test needs remote players |
 | 2026-10-03 | plan | Step 5 split: setup → prototype spec draft → spikes; ragdoll to stretch | Spikes should target what the prototype needs |
+| 2026-10-04 | D28 | Settled for the prototype: Relay + Lobby, Vivox with tap mirroring for radio | S05 Results |
 | 2026-10-04 | D28 | Relay + Lobby for prototype, Steam likely for release; Vivox first, Dissonance fallback | S05 research; Jakub chose free voice |
 | 2026-10-04 | D26 | Movement owner-authoritative; carried objects pinned locally (model C), host physics; B fallback; A out | S01 Results |
 | 2026-10-03 | D35 | Claude Code tooling: Unity CLI over deprecated Unity MCP; Blender skills reviewed and copied; unity-perf dropped | Setup Phase 4 review |
