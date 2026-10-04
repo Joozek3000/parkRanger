@@ -1,6 +1,11 @@
+using System;
+using System.Threading.Tasks;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using Unity.Networking.Transport;
+using Unity.Services.Authentication;
+using Unity.Services.Core;
+using Unity.Services.Multiplayer;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -8,6 +13,7 @@ namespace ParkRangers.Spikes.Shared
 {
     /// <summary>
     /// Host/Join buttons and latency simulation. Sits next to NetworkManager + UnityTransport.
+    /// LAN: direct IP. Relay: Unity Multiplayer Sessions, join code; the session starts NGO itself.
     /// Latency: UTP's global simulator layer (still built into the driver in the Editor).
     /// Each peer delays its own sends by RTT/2, so two peers give the full RTT.
     /// </summary>
@@ -25,9 +31,28 @@ namespace ParkRangers.Spikes.Shared
         [SerializeField] int presetIndex = 1;
 
         public string PresetLabel => Presets[presetIndex].label;
+        public static ISession Session { get; private set; }
 
         NetworkManager Net => NetworkManager.Singleton;
         string status;
+        string joinCode = "";
+        bool busy;
+
+        void Start() => Net.OnClientStopped += OnClientStopped;
+
+        void OnDestroy()
+        {
+            if (Net != null) Net.OnClientStopped -= OnClientStopped;
+        }
+
+        void OnClientStopped(bool wasHost)
+        {
+            var reason = Net.DisconnectReason;
+            status = string.IsNullOrEmpty(reason) ? (wasHost ? "Host stopped." : "Disconnected (no host, or connection lost).") : $"Disconnected: {reason}";
+            Debug.LogWarning($"[Net] {status}");
+            Session?.LeaveAsync();
+            Session = null;
+        }
 
         void Update()
         {
@@ -40,12 +65,25 @@ namespace ParkRangers.Spikes.Shared
 
         void OnGUI()
         {
-            if (Net == null || Net.IsListening) return;
+            if (Net == null) return;
+            if (Net.IsListening)
+            {
+                if (Net.IsClient && !Net.IsConnectedClient) GUI.Label(new Rect(10, 10, 300, 20), "Connecting...");
+                if (Session != null) GUI.Label(new Rect(Screen.width - 210, 10, 200, 20), $"Join code: {Session.Code}");
+                return;
+            }
 
-            GUILayout.BeginArea(new Rect(10, 10, 220, 200), GUI.skin.box);
+            GUILayout.BeginArea(new Rect(10, 10, 240, 260), GUI.skin.box);
+            GUI.enabled = !busy;
+            GUILayout.Label("LAN");
             address = GUILayout.TextField(address);
             if (GUILayout.Button("Host")) StartNetwork(true);
             if (GUILayout.Button("Join")) StartNetwork(false);
+            GUILayout.Label("Relay (internet)");
+            if (GUILayout.Button("Host Relay")) _ = RunRelay(null);
+            joinCode = GUILayout.TextField(joinCode).Trim().ToUpperInvariant();
+            if (GUILayout.Button("Join code")) _ = RunRelay(joinCode);
+            GUI.enabled = true;
             GUILayout.Label($"Sim on start: {PresetLabel} (F1/F2/F3 in game)");
             if (status != null) GUILayout.Label($"<color=red>{status}</color>");
             GUILayout.EndArea();
@@ -59,6 +97,49 @@ namespace ParkRangers.Spikes.Shared
                 ApplyPreset(presetIndex);
             else
                 status = host ? $"Host failed: port {port} in use?" : "Join failed, see Console.";
+        }
+
+        /// <summary>Signs in once per launch. Used by Relay and by voice spikes.</summary>
+        public static async Task EnsureSignedIn()
+        {
+            if (UnityServices.State == ServicesInitializationState.Uninitialized)
+            {
+                // ponytail: random profile per launch so two builds on one machine get different
+                // anonymous player IDs. Costs a new anonymous player per run; fine for spikes.
+                var profile = "p" + Guid.NewGuid().ToString("N").Substring(0, 12);
+                await UnityServices.InitializeAsync(new InitializationOptions().SetProfile(profile));
+            }
+            if (!AuthenticationService.Instance.IsSignedIn)
+                await AuthenticationService.Instance.SignInAnonymouslyAsync();
+        }
+
+        async Task RunRelay(string code)
+        {
+            busy = true;
+            status = code == null ? "Creating session..." : "Joining...";
+            try
+            {
+                await EnsureSignedIn();
+                if (code == null)
+                {
+                    Session = await MultiplayerService.Instance.CreateSessionAsync(
+                        new SessionOptions { MaxPlayers = 4, IsPrivate = true }.WithRelayNetwork());
+                    GUIUtility.systemCopyBuffer = Session.Code;
+                    Debug.Log($"[Net] Relay session up, join code {Session.Code} (copied to clipboard)");
+                }
+                else
+                {
+                    Session = await MultiplayerService.Instance.JoinSessionByCodeAsync(code);
+                }
+                status = null;
+                ApplyPreset(0); // real internet latency; F2/F3 add sim on top
+            }
+            catch (Exception e)
+            {
+                status = e is SessionException se ? $"{se.Error}: {se.Message}" : e.Message;
+                Debug.LogException(e);
+            }
+            busy = false;
         }
 
         void ApplyPreset(int index)
