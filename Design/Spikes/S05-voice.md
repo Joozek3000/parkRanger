@@ -91,10 +91,10 @@ Sources:
 
 ## Done when
 
-- [ ] Connection method chosen; two separate machines join and play in the S01 scene.
+- [ ] Connection method chosen; two separate machines join and play in the S01 scene. (Second machine: Jakub's second laptop.)
 - [ ] Comparison tables filled in with sources and current prices.
 - [ ] Top choice tested: proximity voice works between two clients.
-- [ ] Voice can be routed through the radio filter chain.
+- [ ] Voice can be routed through the radio filter chain. **Must-answer for Vivox:** the same player's voice plays both as proximity voice and through a separate radio AudioSource with its own filters, at the same time. If not possible within ~1 day, stop and report: the fallback is buying Dissonance.
 - [ ] D28 updated with the connection and voice decisions.
 
 ## Out of scope
