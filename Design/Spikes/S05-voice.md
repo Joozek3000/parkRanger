@@ -123,7 +123,7 @@ Lobby UI polish, matchmaking, moderation, text chat.
     | 2 m, Unity audio muted, Vivox output on | — | 0.000 | 0.000 | ~0.003 (noise floor) |
 
     All runs match Unity's linear rolloff; nothing reaches the speakers outside Unity's audio. The Windows capture in the Ubuntu → Win run had other desktop audio under it (broadband RMS ~0.04), so that column uses the 440 Hz component.
-  - Hours used: Jakub: not recorded yet; Claude build/test ~6 h (research, Relay + Vivox integration, three build-to-build test rounds, measurement). Time box 4 days (~24 h).
+  - Hours used: Jakub ~4 h; Claude build/test ~6 h (research, Relay + Vivox integration, three build-to-build test rounds, measurement). Time box 4 days (~24 h).
 - What surprised me:
   - Vivox gives two participant taps on the same player the same native tap id and one shared buffer. Whichever reads first drains it; the other starves and pauses. Hence the mirror workaround above.
   - Vivox plays voice on its own output, non-spatially, in two cases even with `SilenceInChannelAudioMix` on the taps: a participant with no tap yet (player object not spawned), and injected audio, which Vivox also plays on the sender's own speakers. This made the remote player audible beyond 25 m in the first remote test. Fix: mute Vivox's own output (`MuteOutputDevice`) after joining; taps keep playing (measured on Windows and Ubuntu).
