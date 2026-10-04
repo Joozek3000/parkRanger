@@ -8,13 +8,14 @@ namespace ParkRangers.Spikes.Shared
 {
     /// <summary>
     /// Writes BuildStamp's file next to every player build: short commit (+ "-dirty") and build time.
-    /// The commit is read before the build starts, because building rewrites some project files.
+    /// The commit is read first thing in the build: other build hooks write into Assets (the Performance
+    /// Testing package adds Assets/Resources/PerformanceTestRunInfo.json), which would mark every build dirty.
     /// </summary>
     public class BuildStampWriter : IPreprocessBuildWithReport, IPostprocessBuildWithReport
     {
         static string commit;
 
-        public int callbackOrder => 0;
+        public int callbackOrder => int.MinValue;
 
         public void OnPreprocessBuild(BuildReport report) => commit = ReadGit();
 
