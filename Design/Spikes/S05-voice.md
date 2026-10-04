@@ -91,34 +91,61 @@ Sources:
 
 ## Done when
 
-- [ ] Connection method chosen; two separate machines join and play in the S01 scene. (Second machine: Jakub's second laptop.)
-- [ ] Comparison tables filled in with sources and current prices.
-- [ ] Top choice tested: proximity voice works between two clients.
-- [ ] Voice can be routed through the radio filter chain. **Must-answer for Vivox:** the same player's voice plays both as proximity voice and through a separate radio AudioSource with its own filters, at the same time. If not possible within ~1 day, stop and report: the fallback is buying Dissonance.
+- [x] Connection method chosen; two separate machines join and play in the S01 scene. (Second machine: Jakub's second laptop.)
+- [x] Comparison tables filled in with sources and current prices.
+- [x] Top choice tested: proximity voice works between two clients.
+- [x] Voice can be routed through the radio filter chain. **Must-answer for Vivox:** the same player's voice plays both as proximity voice and through a separate radio AudioSource with its own filters, at the same time. If not possible within ~1 day, stop and report: the fallback is buying Dissonance.
 - [ ] D28 updated with the connection and voice decisions.
 
 ## Out of scope
 
 Lobby UI polish, matchmaking, moderation, text chat.
 
-## Results (2026-10-04, in progress)
+## Results (2026-10-04)
 - Answer:
-  - Connection: Unity Relay + Lobby (Multiplayer Sessions API, join code) works. Windows host + Ubuntu laptop joined over the internet (RTT 61 ms); Editor + MPPM over Relay ~56 ms. Join failures now show in red in the menu: host gone, bad join code, build mismatch.
-  - Must-answer (Vivox): **yes, with a workaround.** The same player's voice plays as 3D proximity voice and through a separate 2D radio AudioSource with its own filters, at the same time. Two participant taps on one player do not work (see below). Instead one tap feeds the proximity source, and the radio source plays that tap's own stream clip, kept on the proximity source's read position (~15 lines, no audio-thread code).
+  - Connection: **Unity Relay + Lobby** (Multiplayer Sessions API, join code, anonymous UGS sign-in) works. Windows PC and Ubuntu laptop joined over the internet through Relay and played in the S01 scene (RTT 61 ms). Editor + MPPM over Relay ~56 ms. Join failures show in red in the menu: host gone, bad join code, build mismatch.
+  - Voice: **Vivox works** for proximity and radio. Remote test (Windows and Ubuntu builds): proximity fades out by 25 m, radio carries at any distance, by ear and measured.
+  - Must-answer (Vivox): **yes, with a workaround.** The same player's voice plays as 3D proximity voice and through a separate 2D radio AudioSource with its own filters, at the same time. Two participant taps on one player do not work (see surprises). Instead one tap feeds the proximity source, and the radio source plays that tap's stream clip, kept on the proximity source's read position (`S05Voice.Mirror`, ~15 lines, no audio-thread code).
+    - Risk: the radio only plays while the proximity source plays. If the proximity source stops (tap destroyed or disabled with the player body, a scene load, the Vivox tap-silent-after-scene-load bug [V9], voice-count culling), the radio goes silent too. Beyond max distance is fine: the source goes virtual but keeps advancing (radio still audible at 40 m). Drift over 1024 samples hard-resyncs with a click; not heard in testing.
   - Proximity is a Vivox group channel + Unity 3D audio, not a Vivox positional channel: positional channels cull out-of-range speakers, which would also silence the radio.
-  - Still open: by-ear voice test, voice between the two machines, Vivox on Linux.
+  - The radio chain here is a stand-in (high-pass, low-pass, distortion on the radio AudioSource). S02 has not run yet; any chain of Unity audio filters on that source applies the same way.
+  - Not tested: occlusion; push-to-talk / voice activation / per-player mute UI (criterion 7; Vivox has the APIs); a 200 ms run with voice.
 - Numbers measured:
-  - Vivox, 440 Hz tone injected on the host, measured on the client (Editor + MPPM over Relay): at 2 m proximity RMS 0.25 and radio RMS 0.18, the radio with 3rd/5th harmonics from its distortion filter, so the radio chain applies; at 40 m proximity 0, radio still audible.
-  - Proximity in builds (two Windows builds on one PC over Relay, 440 Hz tone, radio off, measured at the speaker output with WASAPI loopback, so Vivox's own playback counts too): 2 m 0.148, 10 m 0.096, 20 m 0.032, 30 m 0.000 RMS. Matches Unity's linear rolloff (min 1, max 25 m). With Unity audio muted and Vivox's own output on: 0.000, so SilenceInChannelAudioMix works on Windows.
-  - Hours used: pending.
+  - Vivox, Editor + MPPM over Relay, 440 Hz tone injected on the host, measured on the client: at 2 m proximity RMS 0.25 and radio RMS 0.18, the radio with 3rd/5th harmonics from its distortion filter, so the radio chain applies; at 40 m proximity 0, radio still audible.
+  - Proximity in builds, 440 Hz tone, radio off, measured at the listener's speaker output (so Vivox's own playback counts too). Absolute levels differ per machine (output volume); the ratios to 2 m are in brackets.
+
+    | Distance | Linear rolloff gain (min 1, max 25 m) | Win → Win, one PC (RMS, WASAPI loopback) | Win host → Ubuntu (RMS, PipeWire sink capture) | Ubuntu → Win (440 Hz amplitude, WASAPI loopback) |
+    |---|---|---|---|---|
+    | 2 m | 0.96 (1.00) | 0.148 (1.00) | 0.234 (1.00) | 0.148 (1.00) |
+    | 10 m | 0.63 (0.65) | 0.096 (0.65) | 0.152 (0.65) | 0.096 (0.65) |
+    | 20 m | 0.21 (0.22) | 0.032 (0.22) | 0.051 (0.22) | 0.032 (0.22) |
+    | 30 m | 0 | 0.000 | 0.000 | ~0.005 (noise floor) |
+    | 2 m, Unity audio muted, Vivox output on | — | 0.000 | 0.000 | ~0.003 (noise floor) |
+
+    All runs match Unity's linear rolloff; nothing reaches the speakers outside Unity's audio. The Windows capture in the Ubuntu → Win run had other desktop audio under it (broadband RMS ~0.04), so that column uses the 440 Hz component.
+  - Hours used: Jakub: not recorded yet; Claude build/test ~6 h (research, Relay + Vivox integration, three build-to-build test rounds, measurement). Time box 4 days (~24 h).
 - What surprised me:
-  - Vivox gives two participant taps on the same player the same native tap id and one shared buffer. Whichever reads first drains it; the other starves and pauses.
-  - Remote test (Windows host build + Ubuntu client build): connection fine, but the client spawned no props ("NetworkPrefab could not be found"). Not a build mismatch: the two builds held byte-identical NetworkObject hashes. Cause: with scene management off, NGO 2.13 sends in-scene objects by their source-prefab hash, and only records that hash for scenes in Build Settings. `S01_Carry` was not in Build Settings, so every build host sent per-instance hashes no client could resolve; every build-to-build session was broken. Editor + MPPM only worked because play mode fell back to the unsaved prefab hash. Fixed by putting `S01_Carry` in Build Settings and saving NGO's hash data into the scene; the new builds carry the source hashes (checked in the build data). Remote retest pending.
-  - Remote voice test (Windows host + Ubuntu client): the other player stayed clearly audible beyond 25 m with the radio off. Not reproduced Windows-to-Windows: listener on the local camera, tap on the remote body, AudioSource settings intact, no Vivox native leak. Two ways Vivox's own output plays voice non-spatially: any participant without a tap yet, and injected audio, which Vivox also plays on the sender's own speakers. Fix: Vivox's own output is muted (`MuteOutputDevice`); taps keep playing (measured). Linux not yet verified; remote retest pending.
-  - Confirms the S01 note in a real cross-machine test: in-scene NetworkObjects with scene management off depend on hidden editor state (Build Settings list, unsaved hashes) and fail silently. Supports runtime-spawned props, or scene management on, in the prototype spec.
+  - Vivox gives two participant taps on the same player the same native tap id and one shared buffer. Whichever reads first drains it; the other starves and pauses. Hence the mirror workaround above.
+  - Vivox plays voice on its own output, non-spatially, in two cases even with `SilenceInChannelAudioMix` on the taps: a participant with no tap yet (player object not spawned), and injected audio, which Vivox also plays on the sender's own speakers. This made the remote player audible beyond 25 m in the first remote test. Fix: mute Vivox's own output (`MuteOutputDevice`) after joining; taps keep playing (measured on Windows and Ubuntu).
+  - First remote test: connection fine, but the client spawned no props ("NetworkPrefab could not be found"). Not a build mismatch: the two builds held byte-identical NetworkObject hashes. Cause: with scene management off, NGO 2.13 sends in-scene objects by their source-prefab hash, and only records that hash for scenes in Build Settings. `S01_Carry` was not in Build Settings, so every build host sent per-instance hashes no client could resolve; every build-to-build session was broken. Editor + MPPM only worked because play mode fell back to the unsaved prefab hash. Fixed by putting `S01_Carry` in Build Settings and saving NGO's hash data into the scene.
+  - Confirms the S01 note in a real cross-machine test: in-scene NetworkObjects with scene management off depend on hidden editor state (Build Settings list, unsaved hashes) and fail silently.
+  - Builds from different commits joined each other without complaint, which made the props bug look like a version mismatch. Added a build stamp (commit + build time in a corner); the host refuses joins from another commit before anything spawns.
+  - Test setup that made this fast: the Ubuntu laptop over SSH (key auth, home LAN). Claude copies builds, launches them on the laptop's desktop session, reads Player.log, and records the speaker output (`pw-record`, no installs). Windows side: `Tools/loopback_meter.py` (WASAPI loopback). Builds take `-relayhost` / `-relayjoin CODE` / `-s05sweep` for unattended runs: a tone is injected and the listener steps through 2/10/20/30 m, logging each step.
 - Keep (code/assets worth carrying over):
-  - `Shared/`: Relay join-code flow, per-launch auth profile (two builds on one machine), join-failure reasons in the UI, build stamp (commit + build time in a corner; the host refuses joins from another commit before anything spawns).
-  - Radio pattern: one Vivox participant tap, a second AudioSource replaying its stream clip in sync.
-- Decisions updated: D28 proposal after the remaining tests.
+  - `Shared/`: Relay join-code flow, per-launch auth profile (two builds on one machine), join-failure reasons in the UI, build stamp + commit check on join.
+  - Voice pattern: one Vivox group channel; one participant tap per remote player on their body (Unity 3D, linear 1–25 m); Vivox output muted; radio = second 2D AudioSource mirroring the tap's stream clip.
+  - Test tooling: command-line host/join + sweep flags, loopback meter, SSH build-to-build routine.
+- Decisions updated: D28, proposed wording:
+  > ### D28 Connection (lobbies/relay) and voice — settled for the prototype
+  > Settled 2026-10-04 after S05 (`Spikes/S05-voice.md` Results).
+  > - Connection for the prototype: **Unity Relay + Lobby** (Multiplayer Sessions API, join codes, anonymous UGS sign-in). Tested build to build, Windows ↔ Ubuntu over the internet, RTT 61 ms. Fallback: Steam (Facepunch; its NGO transport is stale).
+  > - Connection for release: Steam lobbies likely (friend invites). Decide when there is a Steam app ID; swapping means replacing transport + lobby code only.
+  > - Voice: **Vivox**, one group channel (not positional). Proximity = one participant tap per remote player on their body, Unity 3D audio (linear, 1–25 m). Vivox's own output muted so only the taps play.
+  > - Radio: a second 2D AudioSource replays the proximity tap's audio through its own filter chain (two taps per player don't work in Vivox). Risk: the radio goes silent whenever the proximity source stops (player body despawned or disabled, scene load). Fallback: Dissonance (~€55–110 one-time, built-in Audio Cloning).
+  > - Not yet tested: occlusion, push-to-talk / voice activation / per-player mute UI (Vivox has the APIs).
 - Follow-up ideas → ideas.md:
-  - Prototype spec: runtime-spawned props or scene management on (S01 + S05).
+  - Prototype spec: runtime-spawned props or scene management on (S01 + S05). Coordinator already leans runtime spawn.
+  - Prototype: the radio must keep working when the speaker's body is far away, ragdolled or hidden. Put the proximity tap on an object that stays alive for the whole session.
+  - Prototype: re-create Vivox taps after a scene load ([V9]) if the game loads scenes mid-session.
+  - S02: build the filter chain on a plain AudioSource so it drops onto the S05 radio source unchanged.
+  - Spec status line at the top still says "not started" (coordinator).
