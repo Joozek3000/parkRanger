@@ -47,6 +47,12 @@ namespace ParkRangers.Spikes.Shared
             Net.NetworkConfig.ConnectionApproval = true;
             Net.NetworkConfig.ConnectionData = Encoding.UTF8.GetBytes(BuildStamp.Commit);
             Net.ConnectionApprovalCallback = Approve;
+
+            // Test runs without clicking: -relayhost, or -relayjoin CODE.
+            var args = Environment.GetCommandLineArgs();
+            var join = Array.IndexOf(args, "-relayjoin");
+            if (Array.IndexOf(args, "-relayhost") >= 0) _ = RunRelay(null);
+            else if (join >= 0 && join + 1 < args.Length) _ = RunRelay(args[join + 1].ToUpperInvariant());
         }
 
         void Approve(NetworkManager.ConnectionApprovalRequest request, NetworkManager.ConnectionApprovalResponse response)

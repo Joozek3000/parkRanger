@@ -71,7 +71,7 @@ namespace ParkRangers.Spikes.Shared
             text += $"In: {kbPerSecond:F1} kB/s\n";
             if (ExtraText != null) text += ExtraText();
 
-            GUI.Label(new Rect(10, 10, 400, 200), text);
+            GUI.Label(new Rect(10, 10, 900, 400), text);
         }
     }
 }
