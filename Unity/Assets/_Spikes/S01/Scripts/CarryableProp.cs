@@ -1,11 +1,12 @@
 using Unity.Netcode;
+using Unity.Netcode.Components;
 using UnityEngine;
 
 namespace ParkRangers.Spikes.S01
 {
     /// <summary>
     /// A prop that can be carried with model A, B or C (see CarryMode).
-    /// Needs Rigidbody, NetworkTransform (Owner authority, SwitchTransformSpaceWhenParented) and NetworkRigidbody.
+    /// Needs Rigidbody, NetworkTransform (Owner authority) and NetworkRigidbody.
     /// </summary>
     [RequireComponent(typeof(Rigidbody))]
     public class CarryableProp : NetworkBehaviour
@@ -87,6 +88,15 @@ namespace ParkRangers.Spikes.S01
             }
         }
 
+        // C: no NetworkObject parenting (client saw the prop at the wrong spot, mirrored on turns).
+        // Every peer pins it to its own view of the carrier, so the carrier sees zero lag.
+        void LateUpdate()
+        {
+            if (!IsSpawned || !IsCarried || ActiveMode.Value != CarryMode.C_Kinematic) return;
+            var player = PlayerTransform(Carrier.Value);
+            if (player != null) transform.SetPositionAndRotation(player.TransformPoint(HoldOffset), player.rotation);
+        }
+
         void FollowHold(Transform player)
         {
             if (player == null) return;
@@ -129,8 +139,6 @@ namespace ParkRangers.Spikes.S01
                 case CarryMode.C_Kinematic:
                     if (OwnerClientId != NetworkManager.ServerClientId) NetworkObject.RemoveOwnership();
                     body.isKinematic = true;
-                    NetworkObject.TrySetParent(PlayerTransform(sender), false);
-                    transform.SetLocalPositionAndRotation(HoldOffset, Quaternion.identity);
                     break;
                 default:
                     if (OwnerClientId != NetworkManager.ServerClientId) NetworkObject.RemoveOwnership();
@@ -149,9 +157,8 @@ namespace ParkRangers.Spikes.S01
                 case CarryMode.B_Ownership:
                     break; // the owner already applied it
                 case CarryMode.C_Kinematic:
-                    NetworkObject.TryRemoveParent(true);
                     // Start the flight where the carrier saw it, not where the host's lagged view had it.
-                    transform.SetPositionAndRotation(carrierPosition, carrierRotation);
+                    GetComponent<NetworkTransform>().Teleport(carrierPosition, carrierRotation, transform.localScale);
                     body.isKinematic = false;
                     body.linearVelocity = velocity;
                     break;
