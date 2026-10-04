@@ -159,7 +159,7 @@ Changed 2026-10-04 after S01.
 - Ruled out for carried objects: host simulates the carried prop (S01 model A); it trails the carrier by ~1 round trip.
 - Measured: ~1.2 kB/s (host in) / ~2.3 kB/s (client in), 2 players + 10 props, NGO payload only.
 - Provisional: interest management, AI level of detail.
-- Open: NGO scene management on or off. With it off, in-scene props break easily (a prefab save stopped the client spawning them). Decide in the prototype spec: turn it on, or spawn props at runtime.
+- Open: NGO scene management on or off. With it off, in-scene props break easily: a prefab save stopped the client spawning them (S01), and builds from a scene not in Build Settings sent hashes no client could resolve, while Editor/MPPM still worked (S05). Decide in the prototype spec: turn it on, or spawn props at runtime. Coordinator leans: spawn props at runtime.
 
 **History**
 - 2026-10-04: was "provisional: Netcode for GameObjects, host-authoritative physics, interest management, AI level of detail". S01 settled movement and carrying. Source: `Spikes/S01-carrying-ragdoll.md` Results.
@@ -177,10 +177,17 @@ Planned: Netcode for GameObjects, Unity Transport, Multiplayer Play Mode, Input 
 **History**
 - 2026-10-03: planned list included Polybrush. Jakub couldn't find it in Package Manager; it is deprecated from Unity 6.3.
 
-### D28 Connection (lobbies/relay) and voice — open
-Both tested in spike S05.
-- Connection: Steam lobbies (Facepunch.Steamworks) vs Unity Relay + Lobby. Needed for the prototype fun test with players on different machines.
-- Voice: Dissonance vs Vivox vs Steam voice.
+### D28 Connection (lobbies/relay) and voice — provisional
+Changed 2026-10-04 after S05 day 1 research (details and sources in `Spikes/S05-voice.md`). Final after the S05 tests.
+- Connection for the prototype: **Unity Relay + Lobby** (free up to 50 avg monthly CCU; works with two builds on one machine). Fallback: Steam (Facepunch; its NGO transport is stale).
+- Connection for release: Steam lobbies likely (friend invites). Decide later; swapping means replacing transport + lobby code only.
+- Voice: **Vivox first** (free, same Unity Cloud project as Relay). Jakub chose free for now.
+  - Risk: playing one player's voice through a second, filtered radio source is undocumented in Vivox, and there is a known silent-audio-after-scene-load bug.
+  - Fallback: Dissonance (~€55 on sale / €110 regular, one-time; built-in Audio Cloning fits the radio). If Vivox can't feed the radio in S05, buying Dissonance is the next step.
+- Steam voice: out (whole pipeline would be custom).
+
+**History**
+- 2026-10-04: was "open: Steam lobbies vs Unity Relay + Lobby; Dissonance vs Vivox vs Steam voice".
 
 ### D29 PSX shaders — provisional
 VNTG Shaders (free) first; Retro Shaders Pro (paid) if needed.
@@ -215,6 +222,7 @@ Added 2026-10-03.
   - arjun988 `lowpoly-style` and `unity-export` only, not the plugin (its plugin adds an unpinned second Blender MCP on port 9876)
   - blender-game-skills: skipped for now; revisit when characters need rigging
 - Blender Lab MCP: configured for the frozen mech project only. Add to parkRanger when real art work starts.
+- Test machine: Ubuntu laptop (x86_64) reachable from the PC over SSH (home LAN, key auth, added 2026-10-04). Claude Code uses it for build-to-build tests: copy builds, launch, read Player.log, measure audio. Not exposed to the internet.
 - Codex as a 3D modeling assistant (no code work): undecided (2026-10-04). If yes, it gets its own short modeling-only `AGENTS.md` (Art/ rules, Blender backups, export conventions), not a copy of CLAUDE.md.
 
 ### D34 Repo folder structure — settled
@@ -254,6 +262,7 @@ How players switch to it (per-player toggle, settings option, item?) and whether
 | 2026-10-03 | D27 | Polybrush dropped; collab-proxy, Visual Scripting, AI Inference to be removed | Polybrush deprecated from 6.3; extras unused |
 | 2026-10-03 | D28 | Connection method added to the voice spike (S05) | Prototype fun test needs remote players |
 | 2026-10-03 | plan | Step 5 split: setup → prototype spec draft → spikes; ragdoll to stretch | Spikes should target what the prototype needs |
+| 2026-10-04 | D28 | Relay + Lobby for prototype, Steam likely for release; Vivox first, Dissonance fallback | S05 research; Jakub chose free voice |
 | 2026-10-04 | D26 | Movement owner-authoritative; carried objects pinned locally (model C), host physics; B fallback; A out | S01 Results |
 | 2026-10-03 | D35 | Claude Code tooling: Unity CLI over deprecated Unity MCP; Blender skills reviewed and copied; unity-perf dropped | Setup Phase 4 review |
 | 2026-10-03 | D34 | Repo root moved up one level; Unity project folder renamed to `Unity` | Room for Art, Design, Tools beside the Unity project |
