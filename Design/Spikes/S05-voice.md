@@ -100,3 +100,23 @@ Sources:
 ## Out of scope
 
 Lobby UI polish, matchmaking, moderation, text chat.
+
+## Results (2026-10-04, in progress)
+- Answer:
+  - Connection: Unity Relay + Lobby (Multiplayer Sessions API, join code) works. Windows host + Ubuntu laptop joined over the internet (RTT 61 ms); Editor + MPPM over Relay ~56 ms. Join failures now show in red in the menu: host gone, bad join code, build mismatch.
+  - Must-answer (Vivox): **yes, with a workaround.** The same player's voice plays as 3D proximity voice and through a separate 2D radio AudioSource with its own filters, at the same time. Two participant taps on one player do not work (see below). Instead one tap feeds the proximity source, and the radio source plays that tap's own stream clip, kept on the proximity source's read position (~15 lines, no audio-thread code).
+  - Proximity is a Vivox group channel + Unity 3D audio, not a Vivox positional channel: positional channels cull out-of-range speakers, which would also silence the radio.
+  - Still open: by-ear voice test, voice between the two machines, Vivox on Linux.
+- Numbers measured:
+  - Vivox, 440 Hz tone injected on the host, measured on the client (Editor + MPPM over Relay): at 2 m proximity RMS 0.25 and radio RMS 0.18, the radio with 3rd/5th harmonics from its distortion filter, so the radio chain applies; at 40 m proximity 0, radio still audible.
+  - Hours used: pending.
+- What surprised me:
+  - Vivox gives two participant taps on the same player the same native tap id and one shared buffer. Whichever reads first drains it; the other starves and pauses.
+  - Remote test (Windows host build + Ubuntu client build): connection fine, but the client spawned no props ("NetworkPrefab could not be found"). Not a build mismatch: the two builds held byte-identical NetworkObject hashes. Cause: with scene management off, NGO 2.13 sends in-scene objects by their source-prefab hash, and only records that hash for scenes in Build Settings. `S01_Carry` was not in Build Settings, so every build host sent per-instance hashes no client could resolve; every build-to-build session was broken. Editor + MPPM only worked because play mode fell back to the unsaved prefab hash. Fixed by putting `S01_Carry` in Build Settings and saving NGO's hash data into the scene; the new builds carry the source hashes (checked in the build data). Remote retest pending.
+  - Confirms the S01 note in a real cross-machine test: in-scene NetworkObjects with scene management off depend on hidden editor state (Build Settings list, unsaved hashes) and fail silently. Supports runtime-spawned props, or scene management on, in the prototype spec.
+- Keep (code/assets worth carrying over):
+  - `Shared/`: Relay join-code flow, per-launch auth profile (two builds on one machine), join-failure reasons in the UI, build stamp (commit + build time in a corner; the host refuses joins from another commit before anything spawns).
+  - Radio pattern: one Vivox participant tap, a second AudioSource replaying its stream clip in sync.
+- Decisions updated: D28 proposal after the remaining tests.
+- Follow-up ideas → ideas.md:
+  - Prototype spec: runtime-spawned props or scene management on (S01 + S05).
