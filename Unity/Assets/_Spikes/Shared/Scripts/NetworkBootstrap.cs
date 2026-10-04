@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using System.Threading.Tasks;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
@@ -14,6 +15,7 @@ namespace ParkRangers.Spikes.Shared
     /// <summary>
     /// Host/Join buttons and latency simulation. Sits next to NetworkManager + UnityTransport.
     /// LAN: direct IP. Relay: Unity Multiplayer Sessions, join code; the session starts NGO itself.
+    /// Joins from a build of another commit (BuildStamp) are refused before anything spawns.
     /// Latency: UTP's global simulator layer (still built into the driver in the Editor).
     /// Each peer delays its own sends by RTT/2, so two peers give the full RTT.
     /// </summary>
@@ -36,9 +38,27 @@ namespace ParkRangers.Spikes.Shared
         NetworkManager Net => NetworkManager.Singleton;
         string status;
         string joinCode = "";
+        string refused;
         bool busy;
 
-        void Start() => Net.OnClientStopped += OnClientStopped;
+        void Start()
+        {
+            Net.OnClientStopped += OnClientStopped;
+            Net.NetworkConfig.ConnectionApproval = true;
+            Net.NetworkConfig.ConnectionData = Encoding.UTF8.GetBytes(BuildStamp.Commit);
+            Net.ConnectionApprovalCallback = Approve;
+        }
+
+        void Approve(NetworkManager.ConnectionApprovalRequest request, NetworkManager.ConnectionApprovalResponse response)
+        {
+            var theirs = Encoding.UTF8.GetString(request.Payload);
+            response.Approved = theirs == BuildStamp.Commit;
+            response.CreatePlayerObject = true;
+            if (response.Approved) return;
+            response.Reason = $"Build mismatch: host is {BuildStamp.Commit}, you are {theirs}. Use builds from the same commit.";
+            refused = $"Refused a join, build mismatch: {theirs}";
+            Debug.LogWarning($"[Net] {response.Reason}");
+        }
 
         void OnDestroy()
         {
@@ -65,15 +85,17 @@ namespace ParkRangers.Spikes.Shared
 
         void OnGUI()
         {
+            GUI.Label(new Rect(10, Screen.height - 25, 400, 20), $"build {BuildStamp.Label}");
             if (Net == null) return;
             if (Net.IsListening)
             {
                 if (Net.IsClient && !Net.IsConnectedClient) GUI.Label(new Rect(10, 10, 300, 20), "Connecting...");
                 if (Session != null) GUI.Label(new Rect(Screen.width - 210, 10, 200, 20), $"Join code: {Session.Code}");
+                if (refused != null) GUI.Label(new Rect(Screen.width - 410, 30, 400, 40), $"<color=red>{refused}</color>");
                 return;
             }
 
-            GUILayout.BeginArea(new Rect(10, 10, 240, 260), GUI.skin.box);
+            GUILayout.BeginArea(new Rect(10, 10, 240, 330), GUI.skin.box);
             GUI.enabled = !busy;
             GUILayout.Label("LAN");
             address = GUILayout.TextField(address);
