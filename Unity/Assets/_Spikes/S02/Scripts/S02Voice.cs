@@ -91,7 +91,7 @@ namespace ParkRangers.Spikes.S02
                 MoveListenerToLocalPlayer();
                 SyncTaps();
             }
-            if (toneOn != toneSent && channel != null && Time.unscaledTime >= nextTone) SendTone();
+            if (toneOn != toneSent && channel != null && (!toneOn || Time.unscaledTime >= nextTone)) SendTone();
         }
 
         // Tap follows the head while the body is there; otherwise it stays put and keeps playing.
@@ -235,7 +235,7 @@ namespace ParkRangers.Spikes.S02
                 if (toneOn) VivoxService.Instance.StartAudioInjection(TonePath());
                 else VivoxService.Instance.StopAudioInjection();
                 toneSent = toneOn;
-                nextTone = Time.unscaledTime + 9.9f;
+                nextTone = Time.unscaledTime + (toneOn ? 9.9f : 0f); // a stop or re-start applies at once
                 if (toneOn) Invoke(nameof(ToneEnded), 9.9f);
             }
             catch (Exception e)

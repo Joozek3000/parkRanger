@@ -125,7 +125,7 @@ namespace ParkRangers.Spikes.S02
                 var id = u.OwnerClientId;
                 Edge($"c{id} ptt", u.Transmitting.Value);
                 var tap = voice.VoiceOf(id);
-                if (tap != null) Edge($"c{id} tap", S02Radio.Rms(tap) > edgeRms);
+                if (tap != null) Edge($"c{id} tap", S02Radio.ClipRms(tap) > edgeRms);
                 var mine = LocalRadio();
                 if (mine != null) Edge($"c{id} radio", mine.VoiceRms(id) > edgeRms);
                 if (u.Transmitting.Value) lastTx[id] = Time.time;

@@ -15,6 +15,7 @@ namespace ParkRangers.Spikes.S02
         static AudioClip noiseClip;
 
         readonly Dictionary<ulong, AudioSource> voices = new();
+        readonly Dictionary<ulong, AudioSource> taps = new();
         readonly Dictionary<ulong, float> signals = new();
         readonly Dictionary<ulong, float> dropoutUntil = new();
         readonly HashSet<ulong> seen = new();
@@ -55,12 +56,29 @@ namespace ParkRangers.Spikes.S02
                 voices[talker] = src;
             }
             S02Voice.Mirror(voice, src);
+            taps[talker] = voice;
             signals[talker] = signal;
             seen.Add(talker);
         }
 
-        /// <summary>Output RMS of this radio's playback of a talker; 0 when not playing.</summary>
-        public float VoiceRms(ulong talker) => voices.TryGetValue(talker, out var src) && src.isPlaying ? Rms(src) : 0f;
+        /// <summary>Level this radio is playing for a talker (voice stream x radio volume, before the filters); 0 when not playing.</summary>
+        public float VoiceRms(ulong talker) => voices.TryGetValue(talker, out var src) && src.isPlaying ? ClipRms(src) * src.volume : 0f;
+
+        /// <summary>
+        /// RMS of the next 1024 frames the source will play, read from its clip. Unlike GetOutputData this works when
+        /// the source is out of the local listener's earshot (virtual), so NPC checks don't depend on where this machine's player is.
+        /// The Vivox tap writes ~40 ms ahead of its read pointer, so this is real voice.
+        /// </summary>
+        public static float ClipRms(AudioSource src)
+        {
+            var clip = src.clip;
+            if (clip == null || !src.isPlaying) return 0f;
+            var buf = new float[1024 * clip.channels];
+            clip.GetData(buf, src.timeSamples);
+            var sum = 0f;
+            foreach (var v in buf) sum += v * v;
+            return Mathf.Sqrt(sum / buf.Length);
+        }
 
         AudioSource MakeSource(string sourceName)
         {
@@ -119,7 +137,7 @@ namespace ParkRangers.Spikes.S02
             var text = $"{name} at {transform.position:F0} pow {Powered} static {noise.volume:F2} rms {Rms(noise):F3}";
             if (User != null && User.IsSpawned) text += $" owner c{User.OwnerClientId} tx {Transmitting} bat {User.Battery.Value:F3}";
             foreach (var (talker, src) in voices)
-                text += $" | c{talker} sig {signals.GetValueOrDefault(talker):F2} {(src.isPlaying ? "playing" : "stopped")} vol {src.volume:F2} rms {Rms(src):F3}";
+                text += $" | c{talker} sig {signals.GetValueOrDefault(talker):F2} {(src.isPlaying ? "playing" : "stopped")} vol {src.volume:F2} rms {Rms(src):F3} drift {(taps.TryGetValue(talker, out var tap) && tap != null ? src.timeSamples - tap.timeSamples : 0)}";
             return text;
         }
 
