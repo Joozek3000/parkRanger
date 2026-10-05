@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using ParkRangers.Spikes.Shared;
 using Unity.Netcode;
@@ -16,6 +18,8 @@ namespace ParkRangers.Spikes.S02
     /// links to the repeater (same curve with the repeater's ranges, 0 without line of sight).
     /// Keys: V talk, B recharge, R repeater (this machine), 1-6 teleport spots, F5-F8 place at placeDistances
     /// from the other player.
+    /// Unattended tests: -s02cmd PATH polls that file, runs its lines (see Command) and deletes it.
+    /// [S02edge] lines log wall-clock ms when a remote player's PTT flag, tap stream or radio output switches.
     /// </summary>
     public class S02RadioSystem : MonoBehaviour
     {
@@ -55,11 +59,16 @@ namespace ParkRangers.Spikes.S02
         [Range(0f, 1f)] public float anomalyStaticMax = 0.4f;
         public Transform npc;
         public float overheardRange = 8f;
+        [Tooltip("Radio output RMS a talker must reach to count as overheard")] public float overheardRms = 0.01f;
+        public float edgeRms = 0.02f;
         public Transform[] spots;
         public float[] placeDistances = { 2f, 60f, 170f, 250f };
 
         readonly Dictionary<ulong, float> lastTx = new();
         readonly HashSet<ulong> overheard = new();
+        readonly Dictionary<string, bool> edges = new();
+        static readonly string CmdFile = ArgAfter("-s02cmd");
+        float nextCmd;
         S02Voice voice;
         S02Radio[] radios = { };
         S02PlayerRadio[] users = { };
@@ -97,6 +106,7 @@ namespace ParkRangers.Spikes.S02
         {
             if (Net == null || !Net.IsListening) return;
             Keys();
+            PollCommands();
 
             if (Time.unscaledTime >= nextScan)
             {
@@ -113,17 +123,21 @@ namespace ParkRangers.Spikes.S02
             {
                 if (u == null || !u.IsSpawned || u.IsOwner) continue; // own voice has no tap
                 var id = u.OwnerClientId;
+                Edge($"c{id} ptt", u.Transmitting.Value);
+                var tap = voice.VoiceOf(id);
+                if (tap != null) Edge($"c{id} tap", S02Radio.Rms(tap) > edgeRms);
+                var mine = LocalRadio();
+                if (mine != null) Edge($"c{id} radio", mine.VoiceRms(id) > edgeRms);
                 if (u.Transmitting.Value) lastTx[id] = Time.time;
                 if (Time.time - lastTx.GetValueOrDefault(id, -99f) > pttTail)
                 {
                     overheard.Remove(id);
                     continue;
                 }
-                var src = voice.VoiceOf(id);
-                if (src == null) continue;
+                if (tap == null) continue;
                 foreach (var r in radios)
                     if (r != null && r != u.Radio && r.Powered && !r.Transmitting)
-                        r.Receive(id, src, Link(u.Radio.transform.position, r.transform.position).total);
+                        r.Receive(id, tap, Link(u.Radio.transform.position, r.transform.position).total);
             }
 
             CheckOverheard();
@@ -145,14 +159,69 @@ namespace ParkRangers.Spikes.S02
                 if (d > overheardRange) continue;
                 foreach (var (talker, signal) in r.Heard)
                 {
-                    if (overheard.Contains(talker) || !voice.Speaking(talker)) continue;
+                    // Audible playback, not Vivox's speech flag: PTT + signal + level coming out of the radio.
+                    var rms = r.VoiceRms(talker);
+                    if (overheard.Contains(talker) || rms < overheardRms) continue;
                     overheard.Add(talker);
                     npcFlashUntil = Time.time + 1.5f;
-                    npcLine = $"NPC overheard c{talker} via {r.name} at {d:F1} m (signal {signal:F2})";
+                    npcLine = $"NPC overheard c{talker} via {r.name} at {d:F1} m (signal {signal:F2}, rms {rms:F3})";
                     Debug.Log($"[S02] {npcLine}");
                 }
             }
             npc.GetComponentInChildren<Renderer>().material.color = Time.time < npcFlashUntil ? Color.red : Color.white;
+        }
+
+        void Edge(string key, bool on)
+        {
+            if (edges.GetValueOrDefault(key) == on) return;
+            edges[key] = on;
+            Debug.Log($"[S02edge] {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()} {key} {(on ? "on" : "off")}");
+        }
+
+        static string ArgAfter(string flag)
+        {
+            var args = Environment.GetCommandLineArgs();
+            var i = Array.IndexOf(args, flag);
+            return i >= 0 && i + 1 < args.Length ? args[i + 1] : null;
+        }
+
+        void PollCommands()
+        {
+            if (CmdFile == null || Time.unscaledTime < nextCmd) return;
+            nextCmd = Time.unscaledTime + 0.1f;
+            if (!File.Exists(CmdFile)) return;
+            var lines = File.ReadAllLines(CmdFile);
+            File.Delete(CmdFile);
+            foreach (var line in lines)
+            {
+                var a = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (a.Length == 0) continue;
+                Debug.Log($"[S02cmd] {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()} {line}");
+                try { Command(a); }
+                catch (Exception e) { Debug.LogWarning($"[S02cmd] failed: {e.Message}"); }
+            }
+        }
+
+        // ptt 0|1, tone 0|1, mic 0|1, battery F, repeater 0|1, place M, spot N, tp X Z, npc X Z, hide 0|1, reload
+        void Command(string[] a)
+        {
+            var on = a.Length > 1 && a[1] == "1";
+            float F(int i) => float.Parse(a[i], System.Globalization.CultureInfo.InvariantCulture);
+            switch (a[0])
+            {
+                case "ptt": S02PlayerRadio.AutoTalk = on; break;
+                case "tone": voice.toneOn = on; break;
+                case "mic": if (on) Unity.Services.Vivox.VivoxService.Instance.UnmuteInputDevice(); else Unity.Services.Vivox.VivoxService.Instance.MuteInputDevice(); break;
+                case "battery": LocalRadio().User.Battery.Value = F(1); break;
+                case "repeater": repeaterOn = on; break;
+                case "place": PlaceAt(F(1)); break;
+                case "spot": Teleport(spots[(int)F(1) - 1].position, spots[(int)F(1) - 1].forward); break;
+                case "tp": Teleport(new Vector3(F(1), 0f, F(2)), Vector3.forward); break;
+                case "npc": npc.position = new Vector3(F(1), npc.position.y, F(2)); break;
+                case "hide": voice.HideRemoteBodies(on); break;
+                case "reload": _ = voice.ReloadTest(); break;
+                default: Debug.LogWarning($"[S02cmd] unknown: {a[0]}"); break;
+            }
         }
 
         void Keys()

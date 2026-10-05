@@ -59,6 +59,9 @@ namespace ParkRangers.Spikes.S02
             seen.Add(talker);
         }
 
+        /// <summary>Output RMS of this radio's playback of a talker; 0 when not playing.</summary>
+        public float VoiceRms(ulong talker) => voices.TryGetValue(talker, out var src) && src.isPlaying ? Rms(src) : 0f;
+
         AudioSource MakeSource(string sourceName)
         {
             var go = new GameObject(sourceName, typeof(AudioSource));
@@ -113,14 +116,15 @@ namespace ParkRangers.Spikes.S02
 
         public string Diag()
         {
-            var text = $"{name} pow {Powered} static {noise.volume:F2} rms {Rms(noise):F3}";
+            var text = $"{name} at {transform.position:F0} pow {Powered} static {noise.volume:F2} rms {Rms(noise):F3}";
+            if (User != null && User.IsSpawned) text += $" owner c{User.OwnerClientId} tx {Transmitting} bat {User.Battery.Value:F3}";
             foreach (var (talker, src) in voices)
                 text += $" | c{talker} sig {signals.GetValueOrDefault(talker):F2} {(src.isPlaying ? "playing" : "stopped")} vol {src.volume:F2} rms {Rms(src):F3}";
             return text;
         }
 
         // Source output (after its filters, before distance attenuation), last 1024 samples.
-        static float Rms(AudioSource src)
+        public static float Rms(AudioSource src)
         {
             var buf = new float[1024];
             src.GetOutputData(buf, 0);

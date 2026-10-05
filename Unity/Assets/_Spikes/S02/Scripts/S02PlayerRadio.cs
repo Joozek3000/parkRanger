@@ -9,7 +9,7 @@ namespace ParkRangers.Spikes.S02
     /// <summary>
     /// The player's held radio: push-to-talk (V) and battery, both owner-written NetworkVariables.
     /// Every machine reads them to decide locally which radios play this player's voice. B recharges.
-    /// Command line -s02ptt holds PTT for unattended tests.
+    /// Command line -s02ptt (or "ptt 1" in the -s02cmd file) holds PTT for unattended tests.
     /// </summary>
     public class S02PlayerRadio : NetworkBehaviour
     {
@@ -19,7 +19,7 @@ namespace ParkRangers.Spikes.S02
         public readonly NetworkVariable<bool> Transmitting = new(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
         public readonly NetworkVariable<float> Battery = new(1f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
-        static readonly bool AutoTalk = Environment.GetCommandLineArgs().Contains("-s02ptt");
+        public static bool AutoTalk = Environment.GetCommandLineArgs().Contains("-s02ptt");
 
         public S02Radio Radio => radio;
 
@@ -27,9 +27,8 @@ namespace ParkRangers.Spikes.S02
         {
             if (!IsOwner || !IsSpawned) return;
             var kb = Keyboard.current;
-            if (kb == null) return;
-            if (kb.bKey.wasPressedThisFrame) Battery.Value = 1f;
-            var talk = (kb.vKey.isPressed || AutoTalk) && Battery.Value > 0f;
+            if (kb != null && kb.bKey.wasPressedThisFrame) Battery.Value = 1f;
+            var talk = (AutoTalk || kb != null && kb.vKey.isPressed) && Battery.Value > 0f;
             if (Transmitting.Value != talk) Transmitting.Value = talk;
             // ponytail: battery syncs every tick while talking; send coarse steps if bandwidth ever matters
             if (talk) Battery.Value = Mathf.Max(0f, Battery.Value - drainPerSecond * Time.deltaTime);

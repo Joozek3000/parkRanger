@@ -19,7 +19,8 @@ namespace ParkRangers.Spikes.S02
     /// any scene load (Vivox taps can go silent after one).
     /// Radios mirror the tap's stream clip (Mirror); two taps per participant share one buffer in Vivox.
     /// Keys: M mic mute, O Vivox output (diagnosis), J 440 Hz test tone, K hide remote bodies locally,
-    /// L load + unload an empty scene (tap re-create test). Command line -s02tone starts the tone.
+    /// L load + unload an empty scene (tap re-create test). Command line -s02tone starts the tone;
+    /// S02RadioSystem's -s02cmd file drives the same actions.
     /// </summary>
     public class S02Voice : MonoBehaviour
     {
@@ -33,7 +34,7 @@ namespace ParkRangers.Spikes.S02
         string state = "voice: waiting for connection";
         bool started;
         float nextPoll;
-        bool toneOn = Environment.GetCommandLineArgs().Contains("-s02tone");
+        public bool toneOn = Environment.GetCommandLineArgs().Contains("-s02tone");
         bool toneSent;
         float nextTone;
         bool bodiesHidden;
@@ -59,10 +60,6 @@ namespace ParkRangers.Spikes.S02
                 if (t.clientId == clientId && t.tap != null) return t.tap.GetComponent<AudioSource>();
             return null;
         }
-
-        public bool Speaking(ulong clientId) =>
-            channel != null && VivoxService.Instance.ActiveChannels.TryGetValue(channel, out var ps)
-            && ps.Any(p => p.SpeechDetected && p.DisplayName == $"c{clientId}");
 
         void Update()
         {
@@ -215,7 +212,7 @@ namespace ParkRangers.Spikes.S02
         }
 
         // Stand-in for a body that is despawned, ragdolled or hidden. Local only.
-        void HideRemoteBodies(bool hide)
+        public void HideRemoteBodies(bool hide)
         {
             bodiesHidden = hide;
             foreach (var o in Net.SpawnManager.SpawnedObjectsList.Where(o => o.IsPlayerObject && !o.IsLocalPlayer).ToList())
@@ -223,7 +220,7 @@ namespace ParkRangers.Spikes.S02
             Debug.Log($"[S02] remote bodies {(hide ? "hidden" : "shown")}");
         }
 
-        async Task ReloadTest()
+        public async Task ReloadTest()
         {
             await SceneManager.LoadSceneAsync(emptyScene, LoadSceneMode.Additive);
             await SceneManager.UnloadSceneAsync(emptyScene);
