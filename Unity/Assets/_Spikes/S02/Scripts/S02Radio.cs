@@ -143,7 +143,7 @@ namespace ParkRangers.Spikes.S02
             var text = $"{name} at {transform.position:F0} pow {Powered} static {noise.volume:F2} rms {Rms(noise):F3}";
             if (User != null && User.IsSpawned) text += $" owner c{User.OwnerClientId} tx {Transmitting} bat {User.Battery.Value:F3}";
             foreach (var (talker, src) in voices)
-                text += $" | c{talker} sig {signals.GetValueOrDefault(talker):F2} {(src.isPlaying ? "playing" : "stopped")} vol {Volume(src):F2} rms {Rms(src):F3} drift {(taps.TryGetValue(talker, out var tap) && tap != null ? src.timeSamples - tap.timeSamples : 0)}";
+                text += $" | c{talker} sig {signals.GetValueOrDefault(talker):F2} {(src.isPlaying ? "playing" : "stopped")} vol {Volume(src):F2} rms {Rms(src):F3} drift {(taps.TryGetValue(talker, out var tap) && tap != null ? src.timeSamples - tap.timeSamples : 0)} tapvirtual {tap != null && tap.isVirtual}";
             return text;
         }
 

@@ -164,9 +164,13 @@ namespace ParkRangers.Spikes.S02
                 go.SetActive(true);
                 var src = go.GetComponent<AudioSource>();
                 src.spatialBlend = 1f;
-                src.rolloffMode = AudioRolloffMode.Linear;
                 src.minDistance = 1f;
                 src.maxDistance = voiceMaxDistance;
+                // Linear 1-25 m like before, but floored at -60 dB instead of 0: at volume 0 the source goes virtual,
+                // its position then advances outside the mixer and slips a DSP buffer against the radio mirror, and
+                // Vivox silences mirror audio not yet played (~15 ms gaps).
+                src.rolloffMode = AudioRolloffMode.Custom;
+                src.SetCustomCurve(AudioSourceCurveType.CustomRolloff, AnimationCurve.Linear(src.minDistance / voiceMaxDistance, 1f, 1f, 0.001f));
 
                 taps[p.PlayerId] = (clientId, go, player.transform);
                 tapsCreated++;
