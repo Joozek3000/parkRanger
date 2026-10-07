@@ -183,22 +183,25 @@ namespace ParkRangers.Spikes.S02
         }
 
         /// <summary>
-        /// Plays the proximity source's stream clip at the same read position (S05). The tap writes ~40 ms ahead
-        /// of the proximity read pointer and silences what it has played, so the copy must stay on that pointer.
+        /// Plays the proximity source's stream clip just ahead of its read position. The tap writes ~40 ms ahead
+        /// of the proximity read pointer and silences what has been played, so a copy behind the pointer plays
+        /// 10 ms gaps (chop). Looping: the tap clip is a ~3 s ring buffer.
         /// </summary>
         public static void Mirror(AudioSource prox, AudioSource src)
         {
-            if (src.clip != prox.clip) { src.Stop(); src.clip = prox.clip; }
+            const int lead = 256, maxLead = 1024; // samples, well inside the tap's ~1900-sample write lead
+            if (src.clip != prox.clip) { src.Stop(); src.clip = prox.clip; src.loop = true; }
             if (prox.clip == null || !prox.isPlaying)
             {
                 if (src.isPlaying) src.Pause();
                 return;
             }
-            if (!src.isPlaying) { src.timeSamples = prox.timeSamples; src.Play(); return; }
             var len = prox.clip.samples;
             var drift = ((src.timeSamples - prox.timeSamples) % len + len) % len;
             if (drift > len / 2) drift -= len;
-            if (Mathf.Abs(drift) > 1024) src.timeSamples = prox.timeSamples; // ponytail: hard resync (audible click), fine at this drift
+            if (src.isPlaying && drift >= 0 && drift <= maxLead) return;
+            src.timeSamples = (prox.timeSamples + lead) % len; // ponytail: hard resync (click); only at start in tests
+            if (!src.isPlaying) src.Play();
         }
 
         // Scene listener sits on the static Main Camera; 3D voice needs it on the local player's head camera.

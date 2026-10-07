@@ -8,7 +8,7 @@ namespace ParkRangers.Spikes.S02
     /// A radio in the world (held by a player, or the station set). Receive-only on its own: S02RadioSystem calls
     /// Receive() each frame for every voice that reaches it, on every machine. Each incoming voice plays from a
     /// 3D AudioSource here, so anyone near the radio hears it. Chain per voice: compressor, high-pass, low-pass,
-    /// distortion. Static is a second 3D source looping a noise clip through the same band filters, level from signal and anomalies.
+    /// distortion, then signal-strength gain (S02Gain; after the compressor so weak signal really drops the voice). Static is a second 3D source looping a noise clip through the same band filters, level from signal and anomalies.
     /// </summary>
     public class S02Radio : MonoBehaviour
     {
@@ -53,6 +53,7 @@ namespace ParkRangers.Spikes.S02
                 src.gameObject.AddComponent<AudioHighPassFilter>();
                 src.gameObject.AddComponent<AudioLowPassFilter>();
                 src.gameObject.AddComponent<AudioDistortionFilter>();
+                src.gameObject.AddComponent<S02Gain>();
                 voices[talker] = src;
             }
             S02Voice.Mirror(voice, src);
@@ -61,8 +62,10 @@ namespace ParkRangers.Spikes.S02
             seen.Add(talker);
         }
 
-        /// <summary>Level this radio is playing for a talker (voice stream x radio volume, before the filters); 0 when not playing.</summary>
-        public float VoiceRms(ulong talker) => voices.TryGetValue(talker, out var src) && src.isPlaying ? ClipRms(src) * src.volume : 0f;
+        /// <summary>Level this radio is playing for a talker (voice stream x radio volume x signal gain, before the filters); 0 when not playing.</summary>
+        public float VoiceRms(ulong talker) => voices.TryGetValue(talker, out var src) && src.isPlaying ? ClipRms(src) * Volume(src) : 0f;
+
+        static float Volume(AudioSource src) => src.volume * src.GetComponent<S02Gain>().gain;
 
         /// <summary>
         /// RMS of the next 1024 frames the source will play, read from its clip. Unlike GetOutputData this works when
@@ -113,7 +116,8 @@ namespace ParkRangers.Spikes.S02
                         dropoutUntil[talker] = Time.time + Random.Range(s.dropoutLength.x, s.dropoutLength.y);
                     if (Time.time < dropoutUntil.GetValueOrDefault(talker)) gain = 0f;
                 }
-                src.volume = gain * s.radioVolume;
+                src.volume = s.radioVolume;
+                src.GetComponent<S02Gain>().gain = gain;
                 if (signal > 0f) rxStatic = Mathf.Max(rxStatic, gain == 0f ? s.staticMax : Mathf.Lerp(s.staticMax, s.staticFloor, signal));
 
                 var comp = src.GetComponent<S02Compressor>();
@@ -137,7 +141,7 @@ namespace ParkRangers.Spikes.S02
             var text = $"{name} at {transform.position:F0} pow {Powered} static {noise.volume:F2} rms {Rms(noise):F3}";
             if (User != null && User.IsSpawned) text += $" owner c{User.OwnerClientId} tx {Transmitting} bat {User.Battery.Value:F3}";
             foreach (var (talker, src) in voices)
-                text += $" | c{talker} sig {signals.GetValueOrDefault(talker):F2} {(src.isPlaying ? "playing" : "stopped")} vol {src.volume:F2} rms {Rms(src):F3} drift {(taps.TryGetValue(talker, out var tap) && tap != null ? src.timeSamples - tap.timeSamples : 0)}";
+                text += $" | c{talker} sig {signals.GetValueOrDefault(talker):F2} {(src.isPlaying ? "playing" : "stopped")} vol {Volume(src):F2} rms {Rms(src):F3} drift {(taps.TryGetValue(talker, out var tap) && tap != null ? src.timeSamples - tap.timeSamples : 0)}";
             return text;
         }
 

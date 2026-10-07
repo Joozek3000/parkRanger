@@ -16,6 +16,8 @@ namespace ParkRangers.Spikes.S02
     /// Signal = max(direct, via repeater). Direct: 1 up to cleanRange, linear to 0 at cutRange, x blockedFactor
     /// if terrain blocks line of sight, 0 if either radio is in a dead zone. Via repeater: min of both radios'
     /// links to the repeater (same curve with the repeater's ranges, 0 without line of sight).
+    /// PTT end: a radio keeps playing a talker after PTT-off until their tap has been quiet for pttQuiet,
+    /// at most pttMaxTail (the voice trails the PTT flag over the network).
     /// Keys: V talk, B recharge, R repeater (this machine), 1-6 teleport spots, F5-F8 place at placeDistances
     /// from the other player.
     /// Unattended tests: -s02cmd PATH polls that file, runs its lines (see Command) and deletes it.
@@ -38,7 +40,8 @@ namespace ParkRangers.Spikes.S02
         [Range(0f, 1f)] public float dropoutBelow = 0.35f;
         public float dropoutsPerSecond = 4f;
         public Vector2 dropoutLength = new(0.05f, 0.3f);
-        public float pttTail = 0.3f;
+        public float pttQuiet = 0.15f;
+        public float pttMaxTail = 1f;
 
         [Header("Filter chain")]
         public float highPass = 300f;
@@ -60,11 +63,13 @@ namespace ParkRangers.Spikes.S02
         public Transform npc;
         public float overheardRange = 8f;
         [Tooltip("Radio output RMS a talker must reach to count as overheard")] public float overheardRms = 0.01f;
-        public float edgeRms = 0.02f;
+        [Tooltip("Tap level counted as voice (PTT end, [S02edge] lines)")] public float edgeRms = 0.02f;
         public Transform[] spots;
         public float[] placeDistances = { 2f, 60f, 170f, 250f };
 
         readonly Dictionary<ulong, float> lastTx = new();
+        readonly Dictionary<ulong, float> lastLoud = new();
+        readonly HashSet<ulong> open = new();
         readonly HashSet<ulong> overheard = new();
         readonly Dictionary<string, bool> edges = new();
         static readonly string CmdFile = ArgAfter("-s02cmd");
@@ -125,11 +130,19 @@ namespace ParkRangers.Spikes.S02
                 var id = u.OwnerClientId;
                 Edge($"c{id} ptt", u.Transmitting.Value);
                 var tap = voice.VoiceOf(id);
-                if (tap != null) Edge($"c{id} tap", S02Radio.ClipRms(tap) > edgeRms);
+                var loud = tap != null && S02Radio.ClipRms(tap) > edgeRms;
+                if (tap != null) Edge($"c{id} tap", loud);
                 var mine = LocalRadio();
                 if (mine != null) Edge($"c{id} radio", mine.VoiceRms(id) > edgeRms);
-                if (u.Transmitting.Value) lastTx[id] = Time.time;
-                if (Time.time - lastTx.GetValueOrDefault(id, -99f) > pttTail)
+                if (loud) lastLoud[id] = Time.time;
+                if (u.Transmitting.Value)
+                {
+                    lastTx[id] = Time.time;
+                    open.Add(id);
+                }
+                else if (Time.time - lastLoud.GetValueOrDefault(id, -99f) >= pttQuiet || Time.time - lastTx.GetValueOrDefault(id, -99f) >= pttMaxTail)
+                    open.Remove(id);
+                if (!open.Contains(id))
                 {
                     overheard.Remove(id);
                     continue;
