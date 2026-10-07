@@ -101,12 +101,15 @@ namespace ParkRangers.Spikes.S02
             foreach (var (talker, src) in voices)
             {
                 src.maxDistance = s.radioMaxDistance;
-                // Mirrors all the time, silent (gain 0) when this talker isn't received: see S02Voice.Mirror.
+                if (!seen.Contains(talker) || !Powered)
+                {
+                    if (src.isPlaying) src.Stop();
+                    continue;
+                }
                 // Here, not in Receive: the tap's ProcessAudio coroutine runs after Update and can jump its read
                 // pointer (overrun); mirroring in LateUpdate follows that jump in the same frame (else ~15 ms gap).
                 if (taps[talker] != null) S02Voice.Mirror(taps[talker], src);
-                else if (src.isPlaying) src.Stop();
-                var signal = seen.Contains(talker) && Powered ? signals[talker] : 0f;
+                var signal = signals[talker];
                 var gain = signal > 0f ? Mathf.Lerp(s.weakVoiceGain, 1f, signal) : 0f;
                 if (signal > 0f && signal < s.dropoutBelow)
                 {
