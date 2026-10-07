@@ -88,7 +88,7 @@ Builds: e714549 (Windows + Linux). Measured Windows ↔ Windows on one PC over R
     | Old build, Win → Ubuntu | +293..773 | fixed ~+300 | −18..−459 |
     | Old build, Ubuntu → Win | +292..314 | fixed ~+300 | 0..−13 |
 
-    The −20 ms worst case is the 1024-sample level meter, not a cut. Still talking at PTT-off: radio stops at +998 / +1001 ms (1 s cap). Voice stopped 0.5 s before PTT-off: radio stops within 150 ms of PTT-off.
+    The −20 ms worst case is the 1024-sample level meter, not a cut. Still talking at PTT-off: radio stops at +998 / +1001 ms (1 s cap). Voice stopped 0.5 s before PTT-off: the tap was already quiet, so by the rule the radio stops within 150 ms of PTT-off (the edges can't show it; voice had ended).
 - What surprised me:
   - A Unity AudioSource beyond its max distance (linear rolloff to 0) goes virtual, and a virtual source's timeSamples advances outside the mixer. Vivox uses that position as its read pointer and silences behind it, so anything mirroring the tap needs the tap to stay real.
   - Vivox's tap writes the stream from a coroutine (after Update) and jumps its read pointer on overrun.
