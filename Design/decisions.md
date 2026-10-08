@@ -202,6 +202,7 @@ Kenney / Quaternius (CC0).
 
 ### D31 No Unity building before the prototype spec — settled
 Nothing gets built in Unity until the prototype spec (plan step 6) is done, apart from small tech spikes.
+- 2026-10-08: the map greybox runs as spike S06 under this rule (Jakub chose a spike over changing D31).
 
 ### D32 Prototype scope and time box — provisional
 6–8 week time box, networked from day one. Scope in `ideas.md` → Prototype. Finalised in plan step 6.

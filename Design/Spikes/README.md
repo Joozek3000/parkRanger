@@ -29,6 +29,7 @@ S04 is undecided: 1-day check, full spike, or after the prototype. It has no dep
 | S02 | Radio range, filter and static | 4 days | S01 baseline; S05 for real voice |
 | S03 | Tourist line-of-sight witness check | 3 days | S01 baseline |
 | | **Total (prototype spikes)** | **14 days** | |
+| S06 | Map greybox | 3 days | — |
 | S04 | PSX look (+ optional body-cam view, stretch) | 1–3 days | — |
 
 ## Results template
