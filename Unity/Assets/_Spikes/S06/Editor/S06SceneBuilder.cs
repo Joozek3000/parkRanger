@@ -40,6 +40,8 @@ namespace ParkRangers.Spikes.S06
             overview.depth = -1f;
 
             var map = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>($"{Root}/{Fbx}"));
+            // FBX import lands Blender (x, y) at Unity (-x, -y) seen from above; turn it back so +z = Blender +y.
+            map.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
             foreach (var r in map.GetComponentsInChildren<MeshRenderer>())
             {
                 var go = r.gameObject;
@@ -53,13 +55,14 @@ namespace ParkRangers.Spikes.S06
                 }
                 else if (go.name != "DeadZone_Outline")
                 {
+                    FlipIfUpsideDown(go.GetComponent<MeshFilter>());
                     go.AddComponent<MeshCollider>();
                 }
             }
 
             // Station yard, clear of the buildings, facing the map centre.
             var yard = map.transform.Find("Pad_StationYard").GetComponent<Renderer>().bounds;
-            var spawnPos = new Vector3(yard.center.x, yard.max.y + 0.1f, yard.min.z + 6f);
+            var spawnPos = new Vector3(yard.center.x, yard.max.y + 0.1f, yard.max.z - 6f);
             var spawn = new GameObject("Spawn").transform;
             spawn.SetPositionAndRotation(spawnPos, Quaternion.LookRotation(Vector3.Scale(-spawnPos, new Vector3(1f, 0f, 1f))));
 
@@ -78,6 +81,21 @@ namespace ParkRangers.Spikes.S06
             EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), ScenePath);
             AssetDatabase.SaveAssets();
             Debug.Log("[S06] Map imported and scene built.");
+        }
+
+        // v01's road has its faces flipped in the .blend (normals down): culled from above, skipped by raycasts.
+        // Swap in a flipped copy (stored in the scene). No-op once the .blend is fixed.
+        static void FlipIfUpsideDown(MeshFilter filter)
+        {
+            var source = filter.sharedMesh;
+            if (source.normals.Average(n => n.y) > -0.5f) return;
+            var mesh = Object.Instantiate(source);
+            mesh.name = source.name + "_flipped";
+            mesh.normals = mesh.normals.Select(n => -n).ToArray();
+            for (var i = 0; i < mesh.subMeshCount; i++)
+                mesh.SetTriangles(mesh.GetTriangles(i).Reverse().ToArray(), i);
+            filter.sharedMesh = mesh;
+            Debug.LogWarning($"[S06] {filter.name}: faces point down in the export, flipped in Unity. Fix in Blender: Mesh > Normals > Recalculate Outside.");
         }
 
         static GameObject BuildPlayer()
