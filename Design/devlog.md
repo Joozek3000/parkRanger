@@ -22,6 +22,7 @@ One entry per week, newest at the top. Copy the template below.
 -
 
 ### Hours (rough)
+- S05: Jakub ~4 h + Claude Code ~6 h (time box 24 h).
 - S01: ~4 h total (time box 18 h). One data point; spike boxes may be generous when Claude Code builds and Jakub tests. Re-check after S05.
 
 ### Next week
