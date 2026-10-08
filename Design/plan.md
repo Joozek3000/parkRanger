@@ -26,7 +26,7 @@ Changed 2026-10-03: setup first, then a prototype spec draft, then only the spik
 |---|---|---|---|
 | 5a | Setup: Git + LFS, Claude Code setup, CLAUDE.md, Unity housekeeping. Prompt: `Tools/cc-setup-prompt.md` | ~1 day | Done 2026-10-03 (commits 12f174b, 1c1712c) |
 | 5b | Prototype spec draft: `prototype-spec.md` | ~0.5 day | Done 2026-10-03 (Q1–Q9 on defaults) |
-| 5c | Spikes for the prototype (below) | ~14 days | S01, S05 done; **next: S02** |
+| 5c | Spikes for the prototype (below) | ~14 days | S01, S05 done; S02 waits on friend ear test; **S03 now** |
 | 5d | S04 PSX look: 1-day check now, full spike, or after the prototype | 0–3 days | **Undecided** |
 
 Spike order and rules: `Spikes/README.md`.
@@ -34,8 +34,8 @@ Spike order and rules: `Spikes/README.md`.
 | # | Spike | Spec | Time box | Status |
 |---|---|---|---|---|
 | S01 | Network baseline + object carrying (ragdoll = stretch) | `Spikes/S01-carrying-ragdoll.md` | 3 days | **Done 2026-10-04**: model C, B fallback (D26). Ragdoll skipped. |
-| S05 | Connection (Steam lobbies vs Unity Relay) + voice chat | `Spikes/S05-voice.md` | 4 days | **Done 2026-10-04**: Relay + Lobby, Vivox (D28). Claude ~6 h; Jakub not recorded. |
-| S02 | Radio range, filter and static | `Spikes/S02-radio.md` | 4 days | Spec written |
+| S05 | Connection (Steam lobbies vs Unity Relay) + voice chat | `Spikes/S05-voice.md` | 4 days | **Done 2026-10-04**: Relay + Lobby, Vivox (D28). Claude ~6 h; Jakub ~4 h. |
+| S02 | Radio range, filter and static | `Spikes/S02-radio.md` | 4 days | **In progress**: day 1 built, automated SSH test run (chop, weak-signal, PTT-end fixes pending). Ear test with a friend 2026-10-07. |
 | S03 | Tourist line-of-sight witness check | `Spikes/S03-witness-check.md` | 3 days | Spec written |
 | S04 | PSX look (+ optional body-cam view as stretch) | `Spikes/S04-psx-look.md` | 1–3 days | Undecided |
 
