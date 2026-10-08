@@ -11,6 +11,7 @@ Last updated: 2026-10-03
 ## Inbox (unsorted)
 
 - 2026-10-04 — Two players carrying one heavy object together (Peak-style) — Core? — none — pillar 1. Not tested in S01.
+- 2026-10-04 — Fixed base radio at the ranger station (someone stays at base as dispatcher; tourists/visitors at the station can overhear it) — Core? — none — pillar 1, 2. Came from S02's test 'station radio'.
 - 2026-10-04 — Ragdoll for rangers — Later (already listed) — none — pillar 3. Skipped in S01.
 
 Format: `- YYYY-MM-DD — idea — suggested bucket? — conflicts? — pillar(s)`
