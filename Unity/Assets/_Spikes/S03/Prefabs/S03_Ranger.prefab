@@ -1,0 +1,113 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &158608936493166870
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 4293808635311029377, guid: e6feaf0780f7b984f9c18ec9a12db19d, type: 3}
+      propertyPath: m_InScenePlaced
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4293808635311029377, guid: e6feaf0780f7b984f9c18ec9a12db19d, type: 3}
+      propertyPath: GlobalObjectIdHash
+      value: 1097296703
+      objectReference: {fileID: 0}
+    - target: {fileID: 4293808635311029377, guid: e6feaf0780f7b984f9c18ec9a12db19d, type: 3}
+      propertyPath: SceneMigrationSynchronization
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4293808635311029377, guid: e6feaf0780f7b984f9c18ec9a12db19d, type: 3}
+      propertyPath: InScenePlacedSourceGlobalObjectIdHash
+      value: 27837582
+      objectReference: {fileID: 0}
+    - target: {fileID: 7303465689404509395, guid: e6feaf0780f7b984f9c18ec9a12db19d, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7303465689404509395, guid: e6feaf0780f7b984f9c18ec9a12db19d, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7303465689404509395, guid: e6feaf0780f7b984f9c18ec9a12db19d, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7303465689404509395, guid: e6feaf0780f7b984f9c18ec9a12db19d, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7303465689404509395, guid: e6feaf0780f7b984f9c18ec9a12db19d, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7303465689404509395, guid: e6feaf0780f7b984f9c18ec9a12db19d, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7303465689404509395, guid: e6feaf0780f7b984f9c18ec9a12db19d, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7303465689404509395, guid: e6feaf0780f7b984f9c18ec9a12db19d, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7303465689404509395, guid: e6feaf0780f7b984f9c18ec9a12db19d, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7303465689404509395, guid: e6feaf0780f7b984f9c18ec9a12db19d, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7662067635709384841, guid: e6feaf0780f7b984f9c18ec9a12db19d, type: 3}
+      propertyPath: m_Name
+      value: S03_Ranger
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 7662067635709384841, guid: e6feaf0780f7b984f9c18ec9a12db19d, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3535164522809966084}
+    - targetCorrespondingSourceObject: {fileID: 218121623516252801, guid: e6feaf0780f7b984f9c18ec9a12db19d, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7185047791178851896}
+  m_SourcePrefab: {fileID: 100100000, guid: e6feaf0780f7b984f9c18ec9a12db19d, type: 3}
+--- !u!1 &87135786379787159 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 218121623516252801, guid: e6feaf0780f7b984f9c18ec9a12db19d, type: 3}
+  m_PrefabInstance: {fileID: 158608936493166870}
+  m_PrefabAsset: {fileID: 0}
+--- !u!81 &7185047791178851896
+AudioListener:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 87135786379787159}
+  m_Enabled: 1
+--- !u!1 &7522801483882506655 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7662067635709384841, guid: e6feaf0780f7b984f9c18ec9a12db19d, type: 3}
+  m_PrefabInstance: {fileID: 158608936493166870}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &3535164522809966084
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7522801483882506655}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be2d883e24e3e294a8a9305ce818c7b0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ParkRangers.Spikes.S03.Ranger
+  ShowTopMostFoldoutHeaderGroup: 1
+  reach: 2.5
