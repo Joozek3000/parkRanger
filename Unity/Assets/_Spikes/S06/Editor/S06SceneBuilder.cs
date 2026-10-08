@@ -25,12 +25,14 @@ namespace ParkRangers.Spikes.S06
             File.Copy(Path.Combine(Application.dataPath, "../../Art/Export", Fbx), Path.Combine(Application.dataPath, "_Spikes/S06", Fbx), true);
             AssetDatabase.ImportAsset($"{Root}/{Fbx}", ImportAssetOptions.ForceUpdate);
 
+            var sightBlocker = EnsureSightBlockerLayer();
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene);
 
             var sun = new GameObject("Sun").AddComponent<Light>();
             sun.type = LightType.Directional;
             sun.shadows = LightShadows.Soft;
             sun.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
+            sun.gameObject.AddComponent<MapLighting>();
 
             // Before anyone spawns: top-down view of the whole map. Under the player camera (depth 0).
             var overview = new GameObject("Overview Camera") { tag = "MainCamera" }.AddComponent<Camera>();
@@ -47,15 +49,21 @@ namespace ParkRangers.Spikes.S06
                 var go = r.gameObject;
                 if (go.name.StartsWith("Tree_"))
                 {
-                    // Trunk only (submesh 0: r 0.35 m, 4 m tall, pivot at the base); canopies stay walk-under.
+                    // Trunk only (submesh 0), sized per variant; canopies and spruce branches stay walk-through.
+                    var trunk = go.GetComponent<MeshFilter>().sharedMesh.GetSubMesh(0).bounds;
                     var capsule = go.AddComponent<CapsuleCollider>();
-                    capsule.center = new Vector3(0f, 2f, 0f);
-                    capsule.radius = 0.35f;
-                    capsule.height = 4f;
+                    capsule.center = trunk.center;
+                    capsule.radius = Mathf.Max(trunk.extents.x, trunk.extents.z);
+                    capsule.height = trunk.size.y;
+                }
+                else if (go.name.StartsWith("Bushes_"))
+                {
+                    // Walk-through: blocks raycasts (sight checks) only; the layer collides with nothing.
+                    go.layer = sightBlocker;
+                    go.AddComponent<MeshCollider>();
                 }
                 else if (go.name != "DeadZone_Outline")
                 {
-                    FlipIfUpsideDown(go.GetComponent<MeshFilter>());
                     go.AddComponent<MeshCollider>();
                 }
             }
@@ -83,19 +91,21 @@ namespace ParkRangers.Spikes.S06
             Debug.Log("[S06] Map imported and scene built.");
         }
 
-        // v01's road has its faces flipped in the .blend (normals down): culled from above, skipped by raycasts.
-        // Swap in a flipped copy (stored in the scene). No-op once the .blend is fixed.
-        static void FlipIfUpsideDown(MeshFilter filter)
+        // Layer for things that block sight but not movement (S06 bushes; S03-style raycasts can mask on it).
+        static int EnsureSightBlockerLayer()
         {
-            var source = filter.sharedMesh;
-            if (source.normals.Average(n => n.y) > -0.5f) return;
-            var mesh = Object.Instantiate(source);
-            mesh.name = source.name + "_flipped";
-            mesh.normals = mesh.normals.Select(n => -n).ToArray();
-            for (var i = 0; i < mesh.subMeshCount; i++)
-                mesh.SetTriangles(mesh.GetTriangles(i).Reverse().ToArray(), i);
-            filter.sharedMesh = mesh;
-            Debug.LogWarning($"[S06] {filter.name}: faces point down in the export, flipped in Unity. Fix in Blender: Mesh > Normals > Recalculate Outside.");
+            const string Name = "SightBlocker";
+            var layer = LayerMask.NameToLayer(Name);
+            if (layer < 0)
+            {
+                var tags = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset")[0]);
+                var layers = tags.FindProperty("layers");
+                for (layer = 8; layer < 32 && !string.IsNullOrEmpty(layers.GetArrayElementAtIndex(layer).stringValue); layer++) { }
+                layers.GetArrayElementAtIndex(layer).stringValue = Name;
+                tags.ApplyModifiedPropertiesWithoutUndo();
+            }
+            for (var i = 0; i < 32; i++) Physics.IgnoreLayerCollision(layer, i, true);
+            return layer;
         }
 
         static GameObject BuildPlayer()
