@@ -31,6 +31,8 @@ Claude Code may only:
 
 Any other design change (including `decisions.md` and `ideas.md`): propose it, don't make it.
 
+`Design/` changes are committed on `main`. Spike branches get them by merging `main`, never by committing them on the branch. Exception: a spike's own Results and checkboxes are written on its branch and reach `main` with the spike merge.
+
 ## D31: no gameplay code yet
 
 No gameplay code outside `Unity/Assets/_Spikes/` until the prototype spec (plan step 6) is done.
