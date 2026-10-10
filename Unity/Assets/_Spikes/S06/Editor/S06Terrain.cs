@@ -33,6 +33,11 @@ namespace ParkRangers.Spikes.S06
         static readonly string[] Fixed = { "Road", "Pad_", "Bridge_", "Creek" };
         // Follow the ground vertex by vertex. The dead-zone outline is only a marker.
         static readonly string[] Draped = { "Trail", "DeadZone_" };
+        // Vegetation stays off bad ground: rock (TL_Rock weight within the plant's radius), steep slope, or anything
+        // but terrain under it (road, trails, pads, bridge, creek, buildings, Rock_*). A plant on bad ground moves to the
+        // first good one of MoveTries spots within MoveRadius, else it goes.
+        const float MaxRock = 0.25f, MaxSteepness = 32f, TreeRadius = 2f, BushRadius = 1f, MoveRadius = 10f;
+        const int MoveTries = 24;
 
         /// <summary>Called by the scene builder on the fresh map instance (ground has a MeshCollider).</summary>
         public static void Setup(GameObject map)
@@ -70,10 +75,6 @@ namespace ParkRangers.Spikes.S06
             var original = AssetDatabase.LoadAssetAtPath<TerrainData>(OriginalPath);
             var source = AssetDatabase.LoadAssetAtPath<GameObject>(Fbx).transform;
 
-            data.SetTreeInstances(data.treeInstances, true);
-            EditorUtility.SetDirty(data);
-            BuildBushes(terrain);
-
             // How far the ground moved since Blender. Always from the FBX original, so re-snapping twice changes nothing.
             float Delta(Vector3 p) => Height(data, p) - Height(original, p);
             foreach (Transform t in map)
@@ -88,6 +89,30 @@ namespace ParkRangers.Spikes.S06
                     t.position = new Vector3(p.x, from.y - Height(original, from) + Height(data, p), p.z);
                 }
             }
+
+            // After props and trails, so the ground rule sees their colliders where they end up.
+            var good = GoodGround(terrain);
+            int treesMoved = 0, treesRemoved = 0;
+            var trees = new List<TreeInstance>();
+            var old = data.treeInstances;
+            for (var i = 0; i < old.Length; i++)
+            {
+                var tree = old[i];
+                var at = new Vector2(Origin.x + tree.position.x * Size.x, Origin.z + tree.position.z * Size.z);
+                var spot = Spot(good, at, TreeRadius, i);
+                if (spot == null) { treesRemoved++; continue; }
+                if (spot != at)
+                {
+                    treesMoved++;
+                    tree.position = new Vector3((spot.Value.x - Origin.x) / Size.x, 0f, (spot.Value.y - Origin.z) / Size.z);
+                }
+                trees.Add(tree);
+            }
+            data.SetTreeInstances(trees.ToArray(), true);
+            EditorUtility.SetDirty(data);
+            var (bushesMoved, bushesRemoved) = BuildBushes(terrain, good);
+            Debug.Log($"[S06] Vegetation: trees moved {treesMoved}, removed {treesRemoved}; bushes moved {bushesMoved}, removed {bushesRemoved}.");
+
             Report(map, Delta);
             AssetDatabase.SaveAssets();
         }
@@ -113,7 +138,7 @@ namespace ParkRangers.Spikes.S06
         }
 
         // One renderer + sight collider per 50 m cell, on the walk-through SightBlocker layer. Pivots sit on the ground.
-        static void BuildBushes(Terrain terrain)
+        static (int moved, int removed) BuildBushes(Terrain terrain, System.Func<Vector2, float, bool> good)
         {
             const float Cell = 50f;
             var old = terrain.transform.Find("Bushes");
@@ -125,8 +150,13 @@ namespace ParkRangers.Spikes.S06
             var material = AssetDatabase.LoadAssetAtPath<GameObject>(Fbx).transform.Find("Bushes_0_0").GetComponent<Renderer>().sharedMaterial;
             var layer = LayerMask.NameToLayer("SightBlocker");
             var stored = AssetDatabase.LoadAllAssetsAtPath(BushChunksPath).OfType<Mesh>().ToDictionary(m => m.name);
-            var cells = Records(File.ReadAllText(Scatter), "bushes").Select(r => r.f)
-                .GroupBy(b => (Mathf.FloorToInt((b["x"] - Origin.x) / Cell), Mathf.FloorToInt((b["y"] - Origin.z) / Cell)));
+            var bushes = Records(File.ReadAllText(Scatter), "bushes").Select((r, i) =>
+            {
+                var from = new Vector2(r.f["x"], r.f["y"]);
+                return (b: r.f, from, at: Spot(good, from, BushRadius, i));
+            }).ToList();
+            var cells = bushes.Where(c => c.at != null)
+                .GroupBy(c => (Mathf.FloorToInt((c.at.Value.x - Origin.x) / Cell), Mathf.FloorToInt((c.at.Value.y - Origin.z) / Cell)));
             foreach (var cell in cells)
             {
                 var name = $"Bushes_{cell.Key.Item1}_{cell.Key.Item2}";
@@ -136,12 +166,16 @@ namespace ParkRangers.Spikes.S06
                     if (AssetDatabase.LoadMainAssetAtPath(BushChunksPath) == null) AssetDatabase.CreateAsset(mesh, BushChunksPath);
                     else AssetDatabase.AddObjectToAsset(mesh, BushChunksPath);
                 }
-                mesh.CombineMeshes(cell.Select(b => new CombineInstance
+                mesh.CombineMeshes(cell.Select(c =>
                 {
-                    mesh = bush,
-                    // Blender yaw (CCW from above) is negative Unity yaw; Blender x/y/z scale is Unity x/z/y.
-                    transform = Matrix4x4.TRS(new Vector3(b["x"], Height(terrain.terrainData, new Vector3(b["x"], 0f, b["y"])), b["y"]),
-                        Quaternion.Euler(0f, -b["rot"] * Mathf.Rad2Deg, 0f), new Vector3(b["rx"], b["rz"], b["ry"])),
+                    var (b, at) = (c.b, c.at.Value);
+                    return new CombineInstance
+                    {
+                        mesh = bush,
+                        // Blender yaw (CCW from above) is negative Unity yaw; Blender x/y/z scale is Unity x/z/y.
+                        transform = Matrix4x4.TRS(new Vector3(at.x, Height(terrain.terrainData, new Vector3(at.x, 0f, at.y)), at.y),
+                            Quaternion.Euler(0f, -b["rot"] * Mathf.Rad2Deg, 0f), new Vector3(b["rx"], b["rz"], b["ry"])),
+                    };
                 }).ToArray());
                 EditorUtility.SetDirty(mesh);
                 var go = new GameObject(name, typeof(MeshFilter), typeof(MeshRenderer)) { layer = layer };
@@ -150,6 +184,47 @@ namespace ParkRangers.Spikes.S06
                 go.GetComponent<MeshRenderer>().sharedMaterial = material;
                 go.AddComponent<MeshCollider>().sharedMesh = mesh;
             }
+            return (bushes.Count(c => c.at != null && c.at != c.from), bushes.Count(c => c.at == null));
+        }
+
+        // Is (x, z) good ground for a plant of this radius? See MaxRock.
+        static System.Func<Vector2, float, bool> GoodGround(Terrain terrain)
+        {
+            var data = terrain.terrainData;
+            var n = data.alphamapResolution;
+            var rockLayer = System.Array.FindIndex(data.terrainLayers, l => l.name == "TL_Rock");
+            var rock = data.GetAlphamaps(0, 0, n, n);
+            var texel = Size.x / (n - 1);
+            var mask = ~(1 << LayerMask.NameToLayer("SightBlocker"));
+            Physics.SyncTransforms();
+            return (p, radius) =>
+            {
+                float u = (p.x - Origin.x) / Size.x, v = (p.y - Origin.z) / Size.z;
+                if (u < 0f || u > 1f || v < 0f || v > 1f || data.GetSteepness(u, v) > MaxSteepness) return false;
+                int cx = Mathf.RoundToInt(u * (n - 1)), cz = Mathf.RoundToInt(v * (n - 1)), r = Mathf.CeilToInt(radius / texel) + 1;
+                for (var z = Mathf.Max(cz - r, 0); z <= Mathf.Min(cz + r, n - 1); z++)
+                for (var x = Mathf.Max(cx - r, 0); x <= Mathf.Min(cx + r, n - 1); x++)
+                    if (rock[z, x, rockLayer] > MaxRock && (new Vector2(Origin.x + x * texel, Origin.z + z * texel) - p).magnitude <= radius) return false;
+                // Trees are part of the TerrainCollider, so skipping it skips them too; anything else down to the ground is in the way.
+                var ground = Height(data, new Vector3(p.x, 0f, p.y));
+                return Physics.RaycastAll(new Vector3(p.x, ground + 50f, p.y), Vector3.down, 50.05f, mask, QueryTriggerInteraction.Ignore)
+                    .All(h => h.collider is TerrainCollider);
+            };
+        }
+
+        // Where a plant from `from` stands: there if the ground is good, else the first good one of MoveTries random spots
+        // within MoveRadius (seeded, so reruns pick the same one), else nowhere.
+        static Vector2? Spot(System.Func<Vector2, float, bool> good, Vector2 from, float radius, int seed)
+        {
+            if (good(from, radius)) return from;
+            var rng = new System.Random(seed);
+            for (var i = 0; i < MoveTries; i++)
+            {
+                var angle = (float)rng.NextDouble() * 2f * Mathf.PI;
+                var p = from + MoveRadius * Mathf.Sqrt((float)rng.NextDouble()) * new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+                if (good(p, radius)) return p;
+            }
+            return null;
         }
 
         // Fixed objects should see no ground change under them; snapped ones the same change as at their pivot.
