@@ -38,23 +38,23 @@ namespace ParkRangers.Spikes.S06
             // Radio mast: blinking red beacon over the red lamp at the top.
             var mast = map.Find("RadioMast");
             var top = Center(mast, 1);
-            var beaconGlow = Glow(mast, "Beacon", PrimitiveType.Sphere, top, 1.2f * Vector3.one, Mat("Beacon_Red", red));
-            var beaconLight = Lamp(mast, "Beacon", LightType.Point, top, red, 4f, 15f);
+            var beaconGlow = Glow(mast, "Beacon", PrimitiveType.Sphere, top, 1.2f * Vector3.one, Mat("Beacon_Red", Glow(red)));
+            var beaconLight = Lamp(mast, "Beacon", LightType.Point, top, red, 1.6f, 15f);
 
             // Fire tower: lamp in the cabin, a band of lit windows around it.
             var tower = map.Find("FireTower");
             var cabin = Sub(tower, 1);
             glows.Add(Glow(tower, "Windows", PrimitiveType.Cube, tower.TransformPoint(cabin.center),
-                Vector3.Scale(cabin.size, new Vector3(1.02f, 0.35f, 1.02f)), Mat("Beacon_Warm", warm)));
-            lights.Add(Lamp(tower, "Cabin", LightType.Point, tower.TransformPoint(cabin.center), warm, 6f, 12f));
+                Vector3.Scale(cabin.size, new Vector3(1.02f, 0.35f, 1.02f)), Mat("Beacon_Warm", Glow(warm))));
+            lights.Add(Lamp(tower, "Cabin", LightType.Point, tower.TransformPoint(cabin.center), warm, 2.4f, 12f));
 
             // Diner sign: the panel glows; a lamp over the parking.
             var sign = map.Find("DinerSign");
             var panel = Sub(sign, 1);
             glows.Add(Glow(sign, "Panel", PrimitiveType.Cube, sign.TransformPoint(panel.center),
-                Vector3.Scale(panel.size, new Vector3(1.02f, 1.02f, 1.2f)), Mat("Beacon_Sign", pink)));
+                Vector3.Scale(panel.size, new Vector3(1.02f, 1.02f, 1.2f)), Mat("Beacon_Sign", Glow(pink))));
             var parking = map.Find("Pad_Parking").GetComponent<Renderer>().bounds;
-            lights.Add(Lamp(sign, "Parking", LightType.Point, parking.center + 7f * Vector3.up, Color.Lerp(pink, Color.white, 0.6f), 30f, 22f));
+            lights.Add(Lamp(sign, "Parking", LightType.Point, parking.center + 7f * Vector3.up, Color.Lerp(pink, Color.white, 0.6f), 12f, 22f));
 
             // Station: porch lamp on the yard side, one floodlight on the roof edge aimed down into the yard.
             var station = map.Find("RangerStation");
@@ -63,9 +63,9 @@ namespace ParkRangers.Spikes.S06
             var edge = house.ClosestPoint(new Vector3(yard.center.x, house.max.y, yard.center.z));
             var outward = Vector3.ProjectOnPlane(yard.center - edge, Vector3.up).normalized;
             var porch = edge + 0.5f * outward + 0.8f * Vector3.down;
-            glows.Add(Glow(station, "Porch", PrimitiveType.Sphere, porch, 0.35f * Vector3.one, Mat("Beacon_Warm", warm)));
-            lights.Add(Lamp(station, "Porch", LightType.Point, porch, warm, 5f, 10f));
-            var flood = Lamp(station, "Flood", LightType.Spot, edge + outward + Vector3.up, cool, 40f, 25f);
+            glows.Add(Glow(station, "Porch", PrimitiveType.Sphere, porch, 0.35f * Vector3.one, Mat("Beacon_Warm", Glow(warm))));
+            lights.Add(Lamp(station, "Porch", LightType.Point, porch, warm, 2f, 10f));
+            var flood = Lamp(station, "Flood", LightType.Spot, edge + outward + Vector3.up, cool, 16f, 25f);
             var aim = edge + 10f * outward;
             aim.y = yard.max.y;
             flood.transform.rotation = Quaternion.LookRotation(aim - flood.transform.position);
@@ -78,7 +78,7 @@ namespace ParkRangers.Spikes.S06
             foreach (var side in new[] { -1f, 1f })
             {
                 var down = Lamp(canopy, side < 0f ? "DownL" : "DownR", LightType.Spot,
-                    canopy.TransformPoint(roof.center + new Vector3(side * roof.extents.x * 0.5f, -roof.extents.y - 0.1f, 0f)), cool, 15f, 10f);
+                    canopy.TransformPoint(roof.center + new Vector3(side * roof.extents.x * 0.5f, -roof.extents.y - 0.1f, 0f)), cool, 6f, 10f);
                 down.transform.rotation = Quaternion.LookRotation(Vector3.down);
                 down.spotAngle = 110f;
                 lights.Add(down);
@@ -89,11 +89,14 @@ namespace ParkRangers.Spikes.S06
             var rails = Sub(bridge, 0);
             foreach (var side in new[] { -1f, 1f })
                 lights.Add(Lamp(bridge, side < 0f ? "EndA" : "EndB", LightType.Point,
-                    bridge.TransformPoint(new Vector3(side * rails.extents.x, rails.max.y + 0.8f, rails.center.z)), warm, 3f, 6f));
+                    bridge.TransformPoint(new Vector3(side * rails.extents.x, rails.max.y + 0.8f, rails.center.z)), warm, 1.2f, 6f));
 
             new GameObject("LandmarkLights").AddComponent<S06LandmarkLights>().Init(lights.ToArray(), glows.ToArray(), beaconLight, beaconGlow);
             Debug.Log($"[S06] Landmark lights built: {lights.Count + 1} lights, {glows.Count + 1} glows.");
         }
+
+        // Glow colour for the fog-proof parts, tuned with the night post exposure (~+1.1–1.6 EV): small warm points, not glare.
+        static Color Glow(Color c) => 0.45f * c;
 
         static Bounds Sub(Transform t, int submesh) => t.GetComponent<MeshFilter>().sharedMesh.GetSubMesh(submesh).bounds;
 

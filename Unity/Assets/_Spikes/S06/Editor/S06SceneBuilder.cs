@@ -66,6 +66,8 @@ namespace ParkRangers.Spikes.S06
             net.NetworkConfig ??= new NetworkConfig();
             net.NetworkConfig.NetworkTransport = transport;
             net.NetworkConfig.PlayerPrefab = BuildPlayer();
+            // After BuildPlayer: wires the cookie and cone into the fresh prefab.
+            S06NightAssets.Build();
             net.NetworkConfig.EnableSceneManagement = false;
             netGo.AddComponent<NetworkBootstrap>();
             netGo.AddComponent<NetworkStatsOverlay>();
