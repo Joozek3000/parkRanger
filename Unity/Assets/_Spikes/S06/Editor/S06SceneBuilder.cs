@@ -52,6 +52,7 @@ namespace ParkRangers.Spikes.S06
             }
             EnsureSightBlockerLayer();
             S06Terrain.Setup(map);
+            S06LandmarkLightsBuilder.Build();
 
             // Station yard, clear of the buildings, facing the map centre.
             var yard = map.transform.Find("Pad_StationYard").GetComponent<Renderer>().bounds;
@@ -98,6 +99,7 @@ namespace ParkRangers.Spikes.S06
             var basePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Spikes/Shared/Prefabs/SpikePlayer.prefab");
             var go = (GameObject)PrefabUtility.InstantiatePrefab(basePrefab);
             go.AddComponent<MapWalker>();
+            go.AddComponent<S06Flashlight>();
             var prefab = PrefabUtility.SaveAsPrefabAsset(go, $"{Root}/Prefabs/S06_Ranger.prefab");
             Object.DestroyImmediate(go);
             return prefab;

@@ -20,6 +20,8 @@ namespace ParkRangers.Spikes.S06
         Light sun;
         int index;
 
+        public string Preset => Presets[index].name;
+
         void Start()
         {
             sun = GetComponent<Light>();
