@@ -37,7 +37,7 @@ Spike order and rules: `Spikes/README.md`.
 | S05 | Connection (Steam lobbies vs Unity Relay) + voice chat | `Spikes/S05-voice.md` | 4 days | **Done 2026-10-04**: Relay + Lobby, Vivox (D28). Claude ~6 h; Jakub ~4 h. |
 | S02 | Radio range, filter and static | `Spikes/S02-radio.md` | 4 days | **In progress**: day 1 built, automated SSH test run (chop, weak-signal, PTT-end fixes pending). Ear test with a friend 2026-10-07. |
 | S03 | Tourist line-of-sight witness check | `Spikes/S03-witness-check.md` | 3 days | Spec written |
-| S06 | Map greybox (prototype map scale and layout) | `Spikes/S06-map-greybox.md` | 3 days | **In progress** (2026-10-08): Blender starter blockout |
+| S06 | Map greybox (prototype map scale and layout) | `Spikes/S06-map-greybox.md` | 3 days | **Extended 2026-10-10**: size/layout OK; converting ground to Unity Terrain (D36), ~1 day. Then Results. |
 | S04 | PSX look (+ optional body-cam view as stretch) | `Spikes/S04-psx-look.md` | 1–3 days | Undecided |
 
 ## Setup checklist

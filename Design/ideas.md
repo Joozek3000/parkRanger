@@ -10,6 +10,7 @@ Last updated: 2026-10-03
 
 ## Inbox (unsorted)
 
+- 2026-10-08 — Park map board at the station / handheld map item for rangers — Core? — none — pillar 1.
 - 2026-10-04 — Two players carrying one heavy object together (Peak-style) — Core? — none — pillar 1. Not tested in S01.
 - 2026-10-04 — Fixed base radio at the ranger station (someone stays at base as dispatcher; tourists/visitors at the station can overhear it) — Core? — none — pillar 1, 2. Came from S02's test 'station radio'.
 - 2026-10-04 — Ragdoll for rangers — Later (already listed) — none — pillar 3. Skipped in S01.
@@ -30,6 +31,7 @@ Success test: is it fun for 10 minutes with 2 people?
 - Chores: feeding, trash
 - Weirdness as a single number
 - Afternoon-to-night lighting shift
+- Landmarks for navigation and radio callouts (2026-10-08, S06): fire tower on the hill (also repeater spot), radio mast with red light at the station, tall diner sign, creek with a footbridge, marked trails (blue station→tower, red station→cave, yellow picnic loop). Later if still confusing: giant dead tree, rock outcrop by the cave, map-edge fence.
 - Stretch: one simple night threat (ghosts or shadow people) — default: shadow people
 - Added by prototype spec draft (defaults, see `prototype-spec.md`): ranger station as spawn/return point; stop a fleeing tourist with a 2 s hold; Bigfoot hiding spot (cave); ignored chores draw Bigfoot
 
