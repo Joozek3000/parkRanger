@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
@@ -6,9 +7,10 @@ using UnityEngine.Rendering.Universal;
 namespace ParkRangers.Spikes.S06
 {
     /// <summary>
-    /// Afternoon / dusk (blue hour) / night (moon) / night (no moon), cycled with N. Sits on the sun, which is the moon
-    /// at night (URP gives directional shadows to the main light only). Drives the sky material, trilight ambient,
-    /// exponential fog and a global post-processing Volume. Local only: each player switches their own view.
+    /// Afternoon / dusk (blue hour) / night (moon) / night (no moon) / night (pitch black), cycled with N. Sits on the sun,
+    /// which is the moon at night (URP gives directional shadows to the main light only). Drives the sky material,
+    /// trilight ambient, exponential fog and a global post-processing Volume. Local only: each player switches their own view.
+    /// Live tuning: G fog on/off, [ ] fog density, , . exposure, Backspace back to the preset; sliders while the cursor is free.
     /// </summary>
     [RequireComponent(typeof(Light))]
     public class MapLighting : MonoBehaviour
@@ -58,7 +60,20 @@ namespace ParkRangers.Spikes.S06
                 Fog = new(0.025f, 0.032f, 0.05f), FogDensity = 0.005f, Reflections = 0.03f,
                 Exposure = 1.6f, Saturation = -60f, Temperature = -15f, Vignette = 0.35f, Grain = 0.3f,
             },
+            // Overcast and moonless: lamps, beacons and torches are the only real light.
+            new()
+            {
+                Name = "night (pitch black)", Light = new(0.55f, 0.65f, 0.95f), Intensity = 0f, Elevation = 48f, Azimuth = 200f, Shadows = false,
+                Zenith = new(0.0008f, 0.001f, 0.0016f), Horizon = new(0.006f, 0.007f, 0.01f),
+                // Ambient is about the moon preset's: below it the ground at your feet is pure black. The dense near-black fog
+                // takes away everything past ~30 m (95% at 100 m).
+                AmbientSky = new(0.04f, 0.048f, 0.08f), AmbientEquator = new(0.016f, 0.019f, 0.032f), AmbientGround = new(0.005f, 0.005f, 0.0064f),
+                Fog = new(0.002f, 0.0025f, 0.0035f), FogDensity = 0.03f, Reflections = 0.01f,
+                Exposure = 1.6f, Saturation = -60f, Temperature = -15f, Vignette = 0.35f, Grain = 0.3f,
+            },
         };
+
+        const float MinFog = 0.0005f, MaxFog = 0.2f, MinExposure = -6f, MaxExposure = 3f;
 
         [SerializeField] Material skyMaterial;
 
@@ -69,12 +84,18 @@ namespace ParkRangers.Spikes.S06
         Vignette vignette;
         FilmGrain grain;
         int index;
+        bool fogOn;
+        float fogDensity, exposure;
+        bool panelOpen;
+        Rect panel;
 
         public string Preset => Looks[index].Name;
 
         void Start()
         {
             sun = GetComponent<Light>();
+            // All rendering layers, so the owner's body (own layer, see S06Flashlight) still casts a sun/moon shadow.
+            sun.renderingLayerMask = ~0;
             sky = new Material(skyMaterial);
             RenderSettings.skybox = sky;
 
@@ -97,11 +118,19 @@ namespace ParkRangers.Spikes.S06
 
         void Update()
         {
-            if (Keyboard.current.nKey.wasPressedThisFrame)
+            var kb = Keyboard.current;
+            if (kb.nKey.wasPressedThisFrame)
             {
                 index = (index + 1) % Looks.Length;
                 Apply();
             }
+            if (kb.gKey.wasPressedThisFrame) fogOn = !fogOn;
+            if (kb.leftBracketKey.wasPressedThisFrame) fogDensity *= 0.7f;
+            if (kb.rightBracketKey.wasPressedThisFrame) fogDensity *= 1.4f;
+            if (kb.commaKey.wasPressedThisFrame) exposure -= 0.25f;
+            if (kb.periodKey.wasPressedThisFrame) exposure += 0.25f;
+            if (kb.backspaceKey.wasPressedThisFrame) Apply();
+            Tweak();
 
             // ponytail: re-set every frame because the player camera spawns later; fine for a handful of cameras.
             foreach (var cam in Camera.allCameras)
@@ -111,6 +140,18 @@ namespace ParkRangers.Spikes.S06
             }
         }
 
+        // The controller grabs the cursor on any click; give it back when the click was on the tuning panel.
+        void LateUpdate()
+        {
+            var mouse = Mouse.current;
+            if (!panelOpen || !mouse.leftButton.wasPressedThisFrame) return;
+            var p = mouse.position.ReadValue();
+            if (!panel.Contains(new Vector2(p.x, Screen.height - p.y))) return;
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+
+        // Loads the current preset, including its fog and exposure (tweaks don't carry over).
         void Apply()
         {
             var l = Looks[index];
@@ -133,19 +174,51 @@ namespace ParkRangers.Spikes.S06
             RenderSettings.ambientEquatorColor = l.AmbientEquator;
             RenderSettings.ambientGroundColor = l.AmbientGround;
             RenderSettings.reflectionIntensity = l.Reflections;
-            RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.Exponential;
             RenderSettings.fogColor = l.Fog;
-            RenderSettings.fogDensity = l.FogDensity;
+            fogOn = true;
+            fogDensity = l.FogDensity;
+            exposure = l.Exposure;
+            Tweak();
 
-            color.postExposure.Override(l.Exposure);
             color.saturation.Override(l.Saturation);
             white.temperature.Override(l.Temperature);
             vignette.intensity.Override(l.Vignette);
             grain.intensity.Override(l.Grain);
         }
 
-        void OnGUI() =>
-            GUI.Label(new Rect(10, Screen.height - 45, 400, 20), $"Light [N]: {Preset}, fog density {Looks[index].FogDensity:F3}");
+        void Tweak()
+        {
+            fogDensity = Mathf.Clamp(fogDensity, MinFog, MaxFog);
+            exposure = Mathf.Clamp(exposure, MinExposure, MaxExposure);
+            RenderSettings.fog = fogOn;
+            RenderSettings.fogDensity = fogDensity;
+            color.postExposure.Override(exposure);
+        }
+
+        void OnGUI()
+        {
+            GUI.Label(new Rect(10, Screen.height - 65, 700, 20), $"Light [N]: {Preset}");
+            // Exponential fog: 95% at -ln(0.05) / density ≈ 3 / density.
+            GUI.Label(new Rect(10, Screen.height - 45, 700, 20),
+                $"Fog [G]: {(fogOn ? "on" : "off")}, density {fogDensity:F4} (≈{3f / fogDensity:F0} m to 95% fog) [ ], exposure {exposure:+0.00;−0.00} EV [ , . ], reset [Backspace]");
+
+            panelOpen = Cursor.lockState != CursorLockMode.Locked;
+            if (!panelOpen) return;
+            panel = new Rect(Screen.width - 350f, 10f, 340f, 150f);
+            GUILayout.BeginArea(panel, GUI.skin.box);
+            fogOn = GUILayout.Toggle(fogOn, " Fog");
+            GUILayout.Label($"Fog density {fogDensity:F4}");
+            fogDensity = Mathf.Exp(GUILayout.HorizontalSlider(Mathf.Log(fogDensity), Mathf.Log(MinFog), Mathf.Log(MaxFog)));
+            GUILayout.Label($"Exposure {exposure:+0.00;−0.00} EV");
+            exposure = GUILayout.HorizontalSlider(exposure, MinExposure, MaxExposure);
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Reset to preset")) Apply();
+            if (GUILayout.Button("Log values"))
+                Debug.Log(FormattableString.Invariant($"[S06] {Preset}: {(fogOn ? "" : "fog off, ")}FogDensity = {fogDensity:0.####}f, Exposure = {exposure:0.##}f,"));
+            GUILayout.EndHorizontal();
+            GUILayout.EndArea();
+            Tweak();
+        }
     }
 }

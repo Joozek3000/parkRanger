@@ -21,6 +21,8 @@ namespace ParkRangers.Spikes.S06
         const float ConeLength = 18f;
         const float ConeHalfAngle = 12f;
         static readonly Vector3 Hand = new(0.3f, -0.35f, 0.45f);
+        // Rendering layer for the owner's own (shadow-only) body, which must not shadow its own torch.
+        const uint OwnBodyLayer = 1u << 7;
         static Mesh coneMesh;
 
         [SerializeField] Texture cookie;
@@ -55,7 +57,11 @@ namespace ParkRangers.Spikes.S06
             if (IsOwner)
             {
                 beam.shadows = LightShadows.Soft;
-                beam.GetUniversalAdditionalLightData().additionalLightsShadowResolutionTier = UniversalAdditionalLightData.AdditionalLightsShadowResolutionTierHigh;
+                var data = beam.GetUniversalAdditionalLightData();
+                data.additionalLightsShadowResolutionTier = UniversalAdditionalLightData.AdditionalLightsShadowResolutionTierHigh;
+                foreach (var r in GetComponentsInChildren<Renderer>()) r.renderingLayerMask = OwnBodyLayer;
+                data.customShadowLayers = true;
+                data.shadowRenderingLayers = ~OwnBodyLayer;
             }
             else
             {
