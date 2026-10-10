@@ -11,16 +11,16 @@ namespace ParkRangers.Spikes.S06
 {
     /// <summary>
     /// S06 ground as a Unity Terrain (D36). The first build samples the Blender ground mesh and the scatter JSON
-    /// into S06_Ground.asset; later builds reuse it, so sculpting survives a re-import from Blender.
+    /// into S06_Terrain.asset; later builds reuse it, so sculpting survives a re-import from Blender.
     /// Trees are terrain trees; bushes stay chunk meshes built from the scatter JSON (3,300 terrain trees cost ~5 ms of
     /// main thread in the Editor, chunks almost nothing). Re-snap puts trees, bushes, props and trails back on the ground.
     /// </summary>
     public static class S06Terrain
     {
         const string Dir = "Assets/_Spikes/S06/Terrain";
-        const string DataPath = Dir + "/S06_Ground.asset";
+        const string DataPath = Dir + "/S06_Terrain.asset";
         // The Blender ground, never edited. Props and trails keep their height offset to it.
-        const string OriginalPath = Dir + "/S06_GroundOriginal.asset";
+        const string OriginalPath = Dir + "/S06_Original_Terrain.asset";
         const string Fbx = "Assets/_Spikes/S06/map_greybox_v01.fbx";
         const string Scatter = "../Art/Export/map_greybox_v01_scatter.json";
         const string BushMeshPath = Dir + "/Bush.asset";
