@@ -45,7 +45,7 @@ Spike order and rules: `Spikes/README.md`.
 ### Repo and tools
 - [x] Repo folder structure (D34)
 - [x] Git + LFS init, `.gitignore`, `.gitattributes` (Claude Code, 5a); first commit done
-- [ ] Simple task board (where?)
+- [ ] Simple task board: GitHub Projects / Issues now possible (repo on GitHub, D33)
 - [x] Unity official Claude Code plugin: installed (unity@claude-plugins-official 0.1.6-beta, skills only, no MCP). Restart Claude Code to load its skills.
 - [x] ~~unity-perf~~ dropped: no source found (D35)
 - [x] Unity CLI connected via `com.unity.pipeline` (D35); Unity MCP is fallback only
