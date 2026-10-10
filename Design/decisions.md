@@ -212,7 +212,7 @@ Draft spec with defaults for Q1–Q9: `prototype-spec.md` (2026-10-03).
 
 ### D33 Workflow — settled
 Git + LFS, a simple task board, a weekly devlog.
-Repo is local only for now; no remote (2026-10-03). Revisit when backups or collaborators are needed.
+Remote: GitHub `Joozek3000/parkRanger` (2026-10-10). History: was "local only, no remote" (2026-10-03); Jakub created the GitHub repo for backup and sharing. All branches pushed; LFS on GitHub. Builds stay out of the repo.
 Claude Code does hands-on Unity and git work. The coordinator session keeps docs and plans.
 
 ### D35 Claude Code tooling — provisional
@@ -274,6 +274,7 @@ How players switch to it (per-player toggle, settings option, item?) and whether
 | 2026-10-03 | plan | Step 5 split: setup → prototype spec draft → spikes; ragdoll to stretch | Spikes should target what the prototype needs |
 | 2026-10-04 | D28 | Settled for the prototype: Relay + Lobby, Vivox with tap mirroring for radio | S05 Results |
 | 2026-10-04 | D28 | Relay + Lobby for prototype, Steam likely for release; Vivox first, Dissonance fallback | S05 research; Jakub chose free voice |
+| 2026-10-10 | D33 | Local-only repo → GitHub remote (Joozek3000/parkRanger) | Jakub created the repo |
 | 2026-10-10 | D36 | New: ground in Unity Terrain, models from Blender; realistic shape now, look later | Jakub wants more realistic terrain eventually |
 | 2026-10-04 | D26 | Movement owner-authoritative; carried objects pinned locally (model C), host physics; B fallback; A out | S01 Results |
 | 2026-10-03 | D35 | Claude Code tooling: Unity CLI over deprecated Unity MCP; Blender skills reviewed and copied; unity-perf dropped | Setup Phase 4 review |
