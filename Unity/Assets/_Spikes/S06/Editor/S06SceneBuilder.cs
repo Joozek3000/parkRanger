@@ -10,8 +10,8 @@ using UnityEngine;
 namespace ParkRangers.Spikes.S06
 {
     /// <summary>
-    /// Copies the Blender export into the spike, then builds S06_Map from it: colliders, spawn, network.
-    /// Rerun after every re-export from Blender; it overwrites the scene and the player prefab.
+    /// Copies the Blender export into the spike, then builds S06_Map from it: terrain, colliders, spawn, network.
+    /// Rerun after every re-export from Blender; it overwrites the scene and the player prefab, but keeps the terrain asset.
     /// </summary>
     public static class S06SceneBuilder
     {
@@ -25,7 +25,6 @@ namespace ParkRangers.Spikes.S06
             File.Copy(Path.Combine(Application.dataPath, "../../Art/Export", Fbx), Path.Combine(Application.dataPath, "_Spikes/S06", Fbx), true);
             AssetDatabase.ImportAsset($"{Root}/{Fbx}", ImportAssetOptions.ForceUpdate);
 
-            var sightBlocker = EnsureSightBlockerLayer();
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene);
 
             var sun = new GameObject("Sun").AddComponent<Light>();
@@ -46,27 +45,13 @@ namespace ParkRangers.Spikes.S06
             map.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
             foreach (var r in map.GetComponentsInChildren<MeshRenderer>())
             {
+                // Trees and bushes become terrain trees in S06Terrain.Setup.
                 var go = r.gameObject;
-                if (go.name.StartsWith("Tree_"))
-                {
-                    // Trunk only (submesh 0), sized per variant; canopies and spruce branches stay walk-through.
-                    var trunk = go.GetComponent<MeshFilter>().sharedMesh.GetSubMesh(0).bounds;
-                    var capsule = go.AddComponent<CapsuleCollider>();
-                    capsule.center = trunk.center;
-                    capsule.radius = Mathf.Max(trunk.extents.x, trunk.extents.z);
-                    capsule.height = trunk.size.y;
-                }
-                else if (go.name.StartsWith("Bushes_"))
-                {
-                    // Walk-through: blocks raycasts (sight checks) only; the layer collides with nothing.
-                    go.layer = sightBlocker;
+                if (go.name != "DeadZone_Outline" && !go.name.StartsWith("Tree_") && !go.name.StartsWith("Bushes_"))
                     go.AddComponent<MeshCollider>();
-                }
-                else if (go.name != "DeadZone_Outline")
-                {
-                    go.AddComponent<MeshCollider>();
-                }
             }
+            EnsureSightBlockerLayer();
+            S06Terrain.Setup(map);
 
             // Station yard, clear of the buildings, facing the map centre.
             var yard = map.transform.Find("Pad_StationYard").GetComponent<Renderer>().bounds;
@@ -92,7 +77,7 @@ namespace ParkRangers.Spikes.S06
         }
 
         // Layer for things that block sight but not movement (S06 bushes; S03-style raycasts can mask on it).
-        static int EnsureSightBlockerLayer()
+        static void EnsureSightBlockerLayer()
         {
             const string Name = "SightBlocker";
             var layer = LayerMask.NameToLayer(Name);
@@ -105,7 +90,6 @@ namespace ParkRangers.Spikes.S06
                 tags.ApplyModifiedPropertiesWithoutUndo();
             }
             for (var i = 0; i < 32; i++) Physics.IgnoreLayerCollision(layer, i, true);
-            return layer;
         }
 
         static GameObject BuildPlayer()
