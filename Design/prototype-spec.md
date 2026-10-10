@@ -37,7 +37,7 @@ The full shift is ~20 min (D06). The prototype uses a shorter shift so a test ro
 ### World
 - One forest area, a road, and the town edge with the **diner as a trigger zone**.
 - A ranger station: spawn point, where radios and items are picked up. (Not in the original list; needed as a start/return point.)
-- **[Q2 default]** Size: ~1–1.5 min to cross on foot. (Full map: 3–4 min.)
+- **[Q2 confirmed by Jakub, 2026-10-10, S06]** Size: ~350 × 350 m; walk 4 m/s, sprint 7 m/s → ~90 s across on foot. Layout = S06 greybox (`Art/Source/map_greybox_v01.blend`): station bottom-left, road ~380 m to the diner top-right, hill + fire tower in the middle, creek + bridge through the west valley (dead zone), cave south-east, 3 feeding stations + 4 trash spots spread out, blue/red/yellow trails, dense forest with walk-through bushes.
 
 ### Players [S01, S05]
 - 2 players, first person, walk/run/jump.
