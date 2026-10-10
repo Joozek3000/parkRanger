@@ -72,6 +72,7 @@ Accumulates across the whole season.
 
 ### D12 Map — provisional
 Medium open map, ~3–4 min to cross on foot, under a minute by vehicle.
+- Prototype map (S06, 2026-10-10): ~350 × 350 m, ~90 s across on foot; layout and landmarks in `prototype-spec.md` → World.
 Zones:
 - Forest: lumberjacks, trails, campsites, hooligans, Bigfoot, Baba Yaga's hut
 - Mountains: fire towers, hiker rescues, UFO
@@ -202,6 +203,7 @@ Kenney / Quaternius (CC0).
 
 ### D31 No Unity building before the prototype spec — settled
 Nothing gets built in Unity until the prototype spec (plan step 6) is done, apart from small tech spikes.
+- 2026-10-08: the map greybox runs as spike S06 under this rule (Jakub chose a spike over changing D31).
 
 ### D32 Prototype scope and time box — provisional
 6–8 week time box, networked from day one. Scope in `ideas.md` → Prototype. Finalised in plan step 6.
@@ -225,6 +227,13 @@ Added 2026-10-03.
 - Blender Lab MCP: configured for the frozen mech project only. Add to parkRanger when real art work starts.
 - Test machine: Ubuntu laptop (x86_64) reachable from the PC over SSH (home LAN, key auth, added 2026-10-04). Claude Code uses it for build-to-build tests: copy builds, launch, read Player.log, measure audio. Not exposed to the internet.
 - Codex as a 3D modeling assistant (no code work): undecided (2026-10-04). If yes, it gets its own short modeling-only `AGENTS.md` (Art/ rules, Blender backups, export conventions), not a copy of CLAUDE.md.
+
+### D36 Terrain pipeline — provisional
+Added 2026-10-10 (Jakub: go ahead).
+- Ground = **Unity Terrain** (heightmap, sculpted with Terrain Tools; trees as terrain tree instances; bushes/grass as detail or prefab instances later).
+- Buildings, landmarks and props = **Blender models** (FBX).
+- Terrain *shape* gets realistic now at greybox quality (it drives sightlines, hiding, radio range, chase times). Terrain *look* (textures, grass, rock detail) waits until after the prototype. Art direction stays low-poly PSX (D23).
+- Source: S06 extension. The Blender ground mesh is converted once into the Unity Terrain; after that the Unity Terrain is the source of truth for the ground.
 
 ### D34 Repo folder structure — settled
 Changed 2026-10-03.
@@ -265,6 +274,7 @@ How players switch to it (per-player toggle, settings option, item?) and whether
 | 2026-10-03 | plan | Step 5 split: setup → prototype spec draft → spikes; ragdoll to stretch | Spikes should target what the prototype needs |
 | 2026-10-04 | D28 | Settled for the prototype: Relay + Lobby, Vivox with tap mirroring for radio | S05 Results |
 | 2026-10-04 | D28 | Relay + Lobby for prototype, Steam likely for release; Vivox first, Dissonance fallback | S05 research; Jakub chose free voice |
+| 2026-10-10 | D36 | New: ground in Unity Terrain, models from Blender; realistic shape now, look later | Jakub wants more realistic terrain eventually |
 | 2026-10-04 | D26 | Movement owner-authoritative; carried objects pinned locally (model C), host physics; B fallback; A out | S01 Results |
 | 2026-10-03 | D35 | Claude Code tooling: Unity CLI over deprecated Unity MCP; Blender skills reviewed and copied; unity-perf dropped | Setup Phase 4 review |
 | 2026-10-03 | D34 | Repo root moved up one level; Unity project folder renamed to `Unity` | Room for Art, Design, Tools beside the Unity project |
