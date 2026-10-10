@@ -30,7 +30,9 @@ namespace ParkRangers.Spikes.S06
         static readonly Vector3 Origin = new(-175f, -12f, -175f);
         static readonly Vector3 Size = new(350f, 42f, 350f);
         // Re-snap leaves these alone (the ground was flattened for them); it reports when the ground moved away.
-        static readonly string[] Fixed = { "Road", "Pad_", "Bridge_", "Creek", "DeadZone_" };
+        static readonly string[] Fixed = { "Road", "Pad_", "Bridge_", "Creek" };
+        // Follow the ground vertex by vertex. The dead-zone outline is only a marker.
+        static readonly string[] Draped = { "Trail", "DeadZone_" };
 
         /// <summary>Called by the scene builder on the fresh map instance (ground has a MeshCollider).</summary>
         public static void Setup(GameObject map)
@@ -78,7 +80,7 @@ namespace ParkRangers.Spikes.S06
             {
                 var src = source.Find(t.name);
                 if (src == null || Fixed.Any(t.name.StartsWith)) continue;
-                if (t.name.StartsWith("Trail")) Conform(t, src.GetComponent<MeshFilter>().sharedMesh, Delta);
+                if (Draped.Any(t.name.StartsWith)) Conform(t, src.GetComponent<MeshFilter>().sharedMesh, Delta);
                 else
                 {
                     var from = map.TransformPoint(src.localPosition);
@@ -90,9 +92,11 @@ namespace ParkRangers.Spikes.S06
             AssetDatabase.SaveAssets();
         }
 
-        // Trails and marker posts: each vertex moves by how much the ground under it moved.
+        // Trails, marker posts and the dead-zone outline: each vertex moves by how much the ground under it moved.
         static void Conform(Transform t, Mesh src, System.Func<Vector3, float> delta)
         {
+            // DeadZone_Outline is edges only in Blender; the FBX importer drops those, so its mesh is empty.
+            if (src.vertexCount == 0) return;
             var mesh = Object.Instantiate(src);
             mesh.name = src.name + " (snapped)";
             mesh.vertices = src.vertices.Select(v =>
@@ -155,7 +159,7 @@ namespace ParkRangers.Spikes.S06
             var issues = new List<string>();
             foreach (Transform t in map)
             {
-                if (!t.TryGetComponent<MeshFilter>(out var filter) || t.name.StartsWith("Trail") || t.name == "Creek") continue;
+                if (!t.TryGetComponent<MeshFilter>(out var filter) || Draped.Any(t.name.StartsWith) || t.name == "Creek") continue;
                 var moved = Fixed.Any(t.name.StartsWith) ? 0f : delta(t.position);
                 var worst = filter.sharedMesh.vertices.Select(t.TransformPoint).Select(w => (off: delta(w) - moved, at: w))
                     .OrderBy(x => Mathf.Abs(x.off)).LastOrDefault();
